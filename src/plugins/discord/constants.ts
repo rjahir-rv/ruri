@@ -1,5 +1,5 @@
 /**
- * Application ID registered by @th-ch/pear-desktop dev team
+ * Discord application ID (inherited from Pear Desktop until Ruri registers its own).
  */
 export const clientId = '1177081335727267940';
 /**

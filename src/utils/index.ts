@@ -14,7 +14,7 @@ import type {
   RendererPluginLifecycle,
 } from '@/types/plugins';
 
-export const LoggerPrefix = '[YTMusic]';
+export const LoggerPrefix = '[Ruri]';
 
 export const createPlugin = <
   BackendProperties,

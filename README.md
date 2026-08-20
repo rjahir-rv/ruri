@@ -21,7 +21,7 @@ Ruri is a client for music player. A fork of [Pear Desktop](https://github.com/p
 
 ## Status
 
-Ruri currently wraps `https://music.youtube.com` the same way Pear Desktop does. A glass UI is planned; it is not in this tree yet.
+Ruri wraps `https://music.youtube.com` in an Electron shell. A glass UI is planned; it is not in this tree yet.
 
 | | |
 | --- | --- |
