@@ -1,0 +1,39 @@
+Ruri
+====
+
+Ruri is an independent fork of Pear Desktop. It is not Pear Desktop,
+Glassy Music, YouTube, or Google.
+
+This distribution includes software from the following projects.
+
+
+Pear Desktop
+------------
+
+Copyright (c) th-ch <th-ch@users.noreply.github.com>
+https://github.com/pear-devs/pear-desktop
+
+Licensed under the MIT License. The original license text is in the
+`license` file in this repository.
+
+Ruri's product name, app id (`dev.ruri.desktop`), icons, and original
+glass UI (when added) are not part of upstream Pear Desktop.
+
+
+Ruri
+----
+
+Copyright (c) 2026 rjahir-rv (https://github.com/rjahir-rv)
+
+Licensed under the MIT License (same `license` file).
+
+
+Third-party code
+----------------
+
+Other bundled libraries (Electron, plugins, npm dependencies) keep
+their own licenses. See `package.json` and the corresponding files
+under `node_modules` after install.
+
+This repository must not vendor GNU GPL-3.0 components such as Better
+Lyrics, Glassy Music's Merge Theme, or related extensions.

@@ -130,14 +130,9 @@ if (is.linux()) {
   }
 
   // Overrides WM_CLASS for X11 to correspond to icon filename
-  app.setName(
-    'com.github.th-ch.\u0079\u006f\u0075\u0074\u0075\u0062\u0065\u002d\u006d\u0075\u0073\u0069\u0063',
-  );
+  app.setName('dev.ruri.desktop');
   // for wayland
-  app.commandLine.appendSwitch(
-    'class',
-    'com.github.th-ch.\u0079\u006f\u0075\u0074\u0075\u0062\u0065\u002d\u006d\u0075\u0073\u0069\u0063',
-  );
+  app.commandLine.appendSwitch('class', 'dev.ruri.desktop');
 }
 
 if (disableHardwareAcceleration) {
@@ -673,8 +668,7 @@ app.whenReady().then(async () => {
 
   // Register appID on windows
   if (is.windows()) {
-    const appID =
-      'com.github.th-ch.\u0079\u006f\u0075\u0074\u0075\u0062\u0065\u002d\u006d\u0075\u0073\u0069\u0063';
+    const appID = 'dev.ruri.desktop';
     app.setAppUserModelId(appID);
     const appLocation = process.execPath;
     const appData = app.getPath('appData');
@@ -709,7 +703,7 @@ app.whenReady().then(async () => {
           {
             target: appLocation,
             cwd: path.dirname(appLocation),
-            description: `${APPLICATION_NAME} Desktop App - including custom plugins`,
+            description: `${APPLICATION_NAME} is a client for music player`,
             appUserModelId: appID,
           },
         );

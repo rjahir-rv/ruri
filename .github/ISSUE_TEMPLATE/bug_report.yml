@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a Pear Desktop bug
+description: Report a Ruri bug
 title: "[Bug]: "
 labels: "bug :beetle:"
 body:
@@ -8,29 +8,27 @@ body:
     label: Preflight Checklist
     description: Please ensure you've completed all of the following.
     options:
-      - label: I use the latest version of Pear Desktop (Application).
+      - label: I use the latest version of Ruri.
         required: true
-      - label: I have searched the [issue tracker](https://github.com/pear-devs/pear-desktop/issues) for a bug report that matches the one I want to file, without success.
+      - label: I have searched this repository's issue tracker for a matching report, without success.
         required: true
-      - label: I understand that **pear-devs/pear-desktop has NO affiliation with Google or YouTube**
+      - label: I understand that Ruri has NO affiliation with Google, YouTube, Pear Desktop, or Glassy Music.
         required: true
 - type: input
   id: app-version
   attributes:
-    label: Pear Desktop (Application) Version
+    label: Ruri version
     description: |
-      What version of the Pear Desktop Application are you using?
-
-      Note: Please check if this issue is reproducible with the latest stable release.
-    placeholder: 2.0.0
+      What version of Ruri are you using? Check if the issue still happens on the latest build.
+    placeholder: 0.1.0
   validations:
     required: true
 - type: checkboxes
   attributes:
     label: Checklists
     options:
-      - label: I use the portable version of the Pear Desktop Application.
-      - label: I can reproduce this issue in the [official version of (WEB) YTM](https://music.youtube.com).
+      - label: I use a portable build.
+      - label: I can reproduce this issue in the [official web YouTube Music](https://music.youtube.com).
 - type: dropdown
   id: os
   attributes:
@@ -47,8 +45,8 @@ body:
   id: os-version
   attributes:
     label: Operating System Version
-    description: What operating system version are you using? On Windows, click the Start button > Settings > System > About. On macOS, click the Apple Menu > About This Mac. On Linux, use lsb_release or uname -a.
-    placeholder: "e.g. Windows 10 version 1909, macOS Catalina 10.15.7, or Ubuntu 20.04"
+    description: Windows — Start > Settings > System > About. macOS — Apple menu > About This Mac. Linux — lsb_release or uname -a.
+    placeholder: "e.g. Windows 11, macOS 15, Ubuntu 24.04"
   validations:
     required: true
 - type: dropdown
@@ -64,9 +62,9 @@ body:
     required: true
 - type: input
   attributes:
-    label: Last Known Working Pear Desktop (Application) version
-    description: (If applicable) What is the last version of Pear Desktop this worked in?
-    placeholder: 1.20.0
+    label: Last known working Ruri version
+    description: (If applicable) Last version where this still worked.
+    placeholder: 0.1.0
 - type: textarea
   attributes:
     label: Reproduction steps
@@ -78,13 +76,13 @@ body:
   attributes:
     label: Expected Behavior
     description: A clear and concise description of what you expected to happen.
-  validations:
+    validations:
     required: true
 - type: textarea
   attributes:
     label: Actual Behavior
     description: A clear description of what actually happens.
-  validations:
+    validations:
     required: true
 - type: textarea
   id: enabled-plugins
@@ -97,4 +95,4 @@ body:
 - type: textarea
   attributes:
     label: Additional Information
-    description: If your problem needs further explanation, or if the issue you're seeing cannot be reproduced in a gist, please add more information here.
+    description: Extra context, logs, or screenshots.

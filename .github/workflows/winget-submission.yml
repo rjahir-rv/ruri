@@ -12,8 +12,12 @@ on:
 
 permissions: {}
 
+# Disabled: this pipeline submitted pear-devs.PearDesktop to winget.
+# Ruri must not publish under Pear's identifier.
+
 jobs:
   winget:
+    if: false
     name: Publish winget package
     runs-on: ubuntu-latest
     steps:

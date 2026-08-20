@@ -10,8 +10,11 @@ on:
 
 permissions: {}
 
+# Disabled: Pear Desktop's winget CLA helper. Not used by Ruri.
+
 jobs:
   comment:
+    if: false
     name: Comment to PR
     runs-on: ubuntu-latest
     steps:

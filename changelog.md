@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+Ruri starts as a fork of [pear-devs/pear-desktop](https://github.com/pear-devs/pear-desktop) **v3.12.0**. History below that tag is upstream's.
+
+#### v0.1.0 (unreleased)
+
+> 19 August 2026
+
+- chore: rebrand fork as Ruri (`dev.ruri.desktop`) with MIT NOTICE
+- chore: replace Pear/YouTube-style icon with an original lapis-glass mark
+- ci: stop inheriting Pear auto-release and winget publish
+
 #### [v3.12.0](https://github.com/pear-devs/pear-desktop/compare/v3.12.0...v3.12.0)
 
 #### [v3.12.0](https://github.com/pear-devs/pear-desktop/compare/v3.11.4...v3.12.0)
