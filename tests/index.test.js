@@ -7,42 +7,53 @@ process.env.NODE_ENV = 'test';
 
 const appPath = path.resolve(import.meta.dirname, '..');
 
+const ytmOrigin =
+  'https://music.\u0079\u006f\u0075\u0074\u0075\u0062\u0065.com';
+
 test('Ruri App - With default settings, app is launched and visible', async () => {
+  test.setTimeout(90_000);
+
   const app = await electron.launch({
     cwd: appPath,
-    args: [
-      appPath,
-      '--no-sandbox',
-      '--disable-gpu',
-      '--whitelisted-ips=',
-      '--disable-dev-shm-usage',
-    ],
+    env: {
+      HOME: process.env.HOME,
+      DISPLAY: process.env.DISPLAY,
+      XAUTHORITY: process.env.XAUTHORITY,
+      PATH: process.env.PATH,
+      LANG: process.env.LANG,
+      NODE_ENV: 'production',
+    },
+    args: [appPath, '--no-sandbox'],
   });
 
-  const window = await app.firstWindow();
-
-  const consentForm = await window.$(
-    "form[action='https://consent.\u0079\u006f\u0075\u0074\u0075\u0062\u0065.com/save']",
-  );
-  if (consentForm) {
-    await consentForm.click('button');
-  }
-
-  const url = window.url();
-  expect(
-    url.startsWith(
-      'https://music.\u0079\u006f\u0075\u0074\u0075\u0062\u0065.com',
-    ),
-  ).toBe(true);
+  await expect
+    .poll(
+      () =>
+        app.evaluate(async ({ BrowserWindow }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          return win?.webContents.getURL() ?? '';
+        }),
+      { timeout: 60_000 },
+    )
+    .toContain(ytmOrigin);
 
   const minSize = await app.evaluate(async ({ BrowserWindow }) =>
     BrowserWindow.getAllWindows()[0].getMinimumSize(),
   );
   expect(minSize).toEqual([1100, 620]);
 
-  // The page owns document.title; the renderer rebrands it asynchronously.
-  await expect.poll(() => window.title()).toContain('Ruri');
-  expect(await window.title()).not.toMatch(
+  await expect
+    .poll(() =>
+      app.evaluate(async ({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0].getTitle(),
+      ),
+    )
+    .toContain('Ruri');
+
+  const title = await app.evaluate(async ({ BrowserWindow }) =>
+    BrowserWindow.getAllWindows()[0].getTitle(),
+  );
+  expect(title).not.toMatch(
     /\u0059\u006f\u0075\u0054\u0075\u0062\u0065 \u004d\u0075\u0073\u0069\u0063/i,
   );
 

@@ -1,0 +1,13 @@
+:root {
+  --glassy-blur: 18px;
+  --glassy-saturate: 140%;
+  --glassy-tint-album: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.5);
+  --glassy-tint-low: rgba(12, 12, 16, 0.88);
+  --glassy-border: 1px solid rgba(255, 255, 255, 0.12);
+  --glassy-radius: 14px;
+  --glassy-radius-lg: 18px;
+  --glassy-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glassy-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --glassy-hover: rgba(255, 255, 255, 0.1);
+  --glassy-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

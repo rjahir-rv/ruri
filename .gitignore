@@ -21,3 +21,4 @@ node_modules
 # Local development notes — not published
 AGENTS.md
 docs/glassy.md
+.mcp.json

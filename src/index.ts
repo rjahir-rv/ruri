@@ -323,7 +323,7 @@ function initTheme(win: BrowserWindow) {
   }
 
   win.webContents.once('did-finish-load', () => {
-    if (is.dev()) {
+    if (is.dev() && !isTesting()) {
       console.debug(LoggerPrefix, t('main.console.did-finish-load.dev-tools'));
       win.webContents.openDevTools();
     }
