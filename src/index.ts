@@ -30,6 +30,7 @@ import { languageResources } from 'virtual:i18n';
 import { allPlugins, mainPlugins } from 'virtual:plugins';
 
 import * as config from '@/config';
+import { getWindowMinSize } from '@/config/defaults';
 import { APPLICATION_NAME, loadI18n, setLanguage, t } from '@/i18n';
 import {
   forceLoadMainPlugin,
@@ -43,8 +44,8 @@ import { defaultAuthProxyConfig } from '@/plugins/auth-proxy-adapter/config';
 import { fileExists, injectCSS, injectCSSAsFile } from '@/plugins/utils/main';
 import { restart, setupAppControls } from '@/providers/app-controls';
 import {
-  APP_PROTOCOL,
-  handleProtocol,
+  dispatchProtocolUrl,
+  findProtocolUrl,
   setupProtocolHandler,
 } from '@/providers/protocol-handler';
 import { setupSongInfo } from '@/providers/song-info';
@@ -67,6 +68,11 @@ electronUpdater.autoUpdater.autoDownload = false;
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.exit();
+} else {
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    dispatchProtocolUrl(url);
+  });
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -324,6 +330,10 @@ function initTheme(win: BrowserWindow) {
   });
 }
 
+function resolveWindowTitle(): string {
+  return config.get('options.customWindowTitle') || APPLICATION_NAME;
+}
+
 async function createMainWindow() {
   const windowSize = config.get('window-size');
   const windowMaximized = config.get('window-maximized');
@@ -353,12 +363,17 @@ async function createMainWindow() {
     delete decorations.titleBarStyle;
   }
 
+  const { minWidth, minHeight } = getWindowMinSize(
+    config.get('options.disableMinSize'),
+  );
+
   const electronWindowSettings: Electron.BrowserWindowConstructorOptions = {
     icon,
+    title: resolveWindowTitle(),
     width: windowSize.width,
     height: windowSize.height,
-    minWidth: 325,
-    minHeight: 425,
+    minWidth,
+    minHeight,
     backgroundColor: '#000',
     show: false,
     webPreferences: {
@@ -611,6 +626,7 @@ app.once('browser-window-created', (_event, win) => {
   const customWindowTitle = config.get('options.customWindowTitle');
 
   if (customWindowTitle) {
+    win.setTitle(customWindowTitle);
     win.on('page-title-updated', (event) => {
       event.preventDefault();
       win.setTitle(customWindowTitle);
@@ -768,22 +784,32 @@ app.whenReady().then(async () => {
 
   setupProtocolHandler(mainWindow);
 
+  const launchProtocolUrl = findProtocolUrl(process.argv);
+  if (launchProtocolUrl) {
+    if (is.dev()) {
+      console.debug(
+        LoggerPrefix,
+        t('main.console.second-instance.receive-command', {
+          command: launchProtocolUrl,
+        }),
+      );
+    }
+    dispatchProtocolUrl(launchProtocolUrl);
+  }
+
   app.on('second-instance', (_, commandLine) => {
-    const uri = `${APP_PROTOCOL}://`;
-    const protocolArgv = commandLine.find((arg) => arg.startsWith(uri));
+    const protocolArgv = findProtocolUrl(commandLine);
     if (protocolArgv) {
-      const lastIndex = protocolArgv.endsWith('/') ? -1 : undefined;
-      const command = protocolArgv.slice(uri.length, lastIndex);
       if (is.dev()) {
         console.debug(
           LoggerPrefix,
-          t('main.console.second-instance.receive-command', { command }),
+          t('main.console.second-instance.receive-command', {
+            command: protocolArgv,
+          }),
         );
       }
-
-      const splited = decodeURIComponent(command).split(' ');
-
-      handleProtocol(splited.shift()!, ...splited);
+      dispatchProtocolUrl(protocolArgv);
+      // A deep link is a remote control: do not steal focus / unhide the window.
       return;
     }
 

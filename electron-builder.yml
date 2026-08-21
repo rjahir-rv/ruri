@@ -1,5 +1,10 @@
 appId: "dev.ruri.desktop"
 productName: "Ruri"
+protocols:
+  - name: Ruri
+    schemes:
+      - ruri
+    role: Viewer
 files:
   - '!*'
   - dist

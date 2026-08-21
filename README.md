@@ -28,21 +28,40 @@ Ruri wraps `https://music.youtube.com` in an Electron shell. A glass UI is plann
 | Product | Ruri |
 | License | [MIT](license) — see [NOTICE](NOTICE) |
 | App id | `dev.ruri.desktop` |
+| Protocol | `ruri:` |
+| Min window | 1100×620 (disable under Options → Advanced) |
 | Forked from | pear-devs/pear-desktop 3.12.0 |
 
 This repository stays MIT. Do not vendor GPL-3.0 code (Better Lyrics, Glassy Music Merge Theme, or related extensions).
 
-## First publish
+## Deep links
 
-`origin` may still point at pear-devs/pear-desktop. Do **not** push there.
+The packaged app registers `ruri://`. Commands are playback controls:
 
-```bash
-git remote rename origin upstream
-git remote add origin git@github.com:rjahir-rv/ruri.git
-git push -u origin master
+```
+ruri://play
+ruri://pause
+ruri://playPause
+ruri://next
+ruri://previous
+ruri://like
+ruri://seekTo%2030
 ```
 
-Later, merge Pear with `git fetch upstream && git merge upstream/master`. Keep Ruri identity files (`package.json`, `electron-builder.yml`, `license`, `NOTICE`, `README.md`, icons, `src/i18n/index.ts`, `src/index.ts` app id).
+Arguments are separated by an encoded space (`%20`).
+Linux example: `xdg-open 'ruri://playPause'`. Do not use Pear’s `youtubemusic:` scheme.
+
+## First publish
+
+`origin` is `rjahir-rv/ruri`. Do **not** push to `pear-devs/pear-desktop` (`upstream`).
+
+```bash
+git remote add upstream https://github.com/pear-devs/pear-desktop.git
+git fetch upstream
+git merge upstream/master
+```
+
+Keep Ruri identity files (`package.json`, `electron-builder.yml`, `license`, `NOTICE`, `README.md`, icons, `src/i18n/index.ts`, `src/index.ts` app id).
 
 ## Dev
 

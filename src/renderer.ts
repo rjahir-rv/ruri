@@ -3,7 +3,7 @@ import { setTheme } from 'mdui/functions/setTheme.js';
 import 'mdui/mdui.css';
 import 'mdui';
 
-import { loadI18n, setLanguage, t as i18t } from '@/i18n';
+import { APPLICATION_NAME, loadI18n, setLanguage, t as i18t } from '@/i18n';
 import {
   defaultTrustedTypePolicy,
   registerWindowDefaultTrustedTypePolicy,
@@ -35,6 +35,44 @@ let isApiLoaded = false;
 let firstDataLoaded = false;
 
 registerWindowDefaultTrustedTypePolicy();
+
+const siteWindowTitle =
+  '\u0059\u006f\u0075\u0054\u0075\u0062\u0065 \u004d\u0075\u0073\u0069\u0063';
+
+function brandDocumentTitle() {
+  // Only rebrands the page title. `options.customWindowTitle` is enforced in
+  // the main process (page-title-updated), so it wins over this.
+  const current = document.title;
+  let next = current.replaceAll(siteWindowTitle, APPLICATION_NAME);
+  if (!next.trim()) {
+    next = APPLICATION_NAME;
+  }
+  if (next !== current) {
+    document.title = next;
+  }
+}
+
+function observeDocumentTitle() {
+  const titleEl = document.querySelector('title');
+  if (!titleEl) {
+    new MutationObserver((_records, observer) => {
+      if (document.querySelector('title')) {
+        observer.disconnect();
+        observeDocumentTitle();
+      }
+    }).observe(document.head ?? document.documentElement, { childList: true });
+    return;
+  }
+
+  brandDocumentTitle();
+  new MutationObserver(brandDocumentTitle).observe(titleEl, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+  });
+}
+
+observeDocumentTitle();
 
 async function listenForApiLoad() {
   if (!isApiLoaded) {

@@ -16,6 +16,7 @@ import { allPlugins } from 'virtual:plugins';
 import { APPLICATION_NAME, setLanguage, t } from '@/i18n';
 
 import * as config from './config';
+import { getWindowMinSize } from './config/defaults';
 import { getAllMenuTemplate, loadAllMenuPlugins } from './loader/menu';
 import { restart } from './providers/app-controls';
 import { startingPages } from './providers/extracted-data';
@@ -549,6 +550,27 @@ export const mainMenuTemplate = async (
                   'options.disableHardwareAcceleration',
                   item.checked,
                 );
+              },
+            },
+            {
+              label: t(
+                'main.menu.options.submenu.advanced-options.submenu.disable-min-size',
+              ),
+              type: 'checkbox',
+              checked: config.get('options.disableMinSize'),
+              click(item: MenuItem) {
+                // Applied live first: setMenuOption may restart the app.
+                const { minWidth, minHeight } = getWindowMinSize(item.checked);
+                win.setMinimumSize(minWidth, minHeight);
+                if (!item.checked) {
+                  const [width, height] = win.getSize();
+                  win.setSize(
+                    Math.max(width, minWidth),
+                    Math.max(height, minHeight),
+                  );
+                }
+
+                config.setMenuOption('options.disableMinSize', item.checked);
               },
             },
             {
