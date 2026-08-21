@@ -384,7 +384,7 @@ export const TitleBar = (props: TitleBarProps) => {
 
           (element as HTMLElement).style.setProperty(
             'transition-delay',
-            `${(length * 0.025) - (index * 0.025)}s`,
+            `${(length - index) * 0.025}s`,
           );
         }}
       >

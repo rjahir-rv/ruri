@@ -396,12 +396,14 @@ async function createMainWindow() {
 
     const scaledX = windowX;
     const scaledY = windowY;
+    const halfWidth = scaledWidth / 2;
+    const halfHeight = scaledHeight / 2;
 
     if (
-      scaledX + (scaledWidth / 2) < display.bounds.x - 8 || // Left
-      scaledX + (scaledWidth / 2) > display.bounds.x + display.bounds.width || // Right
+      scaledX + halfWidth < display.bounds.x - 8 || // Left
+      scaledX + halfWidth > display.bounds.x + display.bounds.width || // Right
       scaledY < display.bounds.y - 8 || // Top
-      scaledY + (scaledHeight / 2) > display.bounds.y + display.bounds.height // Bottom
+      scaledY + halfHeight > display.bounds.y + display.bounds.height // Bottom
     ) {
       // Window is offscreen
       if (is.dev()) {
@@ -811,8 +813,7 @@ app.whenReady().then(async () => {
       clearTimeout(updateTimeout);
     }, 2000);
     electronUpdater.autoUpdater.on('update-available', () => {
-      const downloadLink =
-        'https://github.com/rjahir-rv/ruri/releases/latest';
+      const downloadLink = 'https://github.com/rjahir-rv/ruri/releases/latest';
       const dialogOptions: Electron.MessageBoxOptions = {
         type: 'info',
         buttons: [
