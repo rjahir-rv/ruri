@@ -2,7 +2,7 @@
   --glassy-blur: 18px;
   --glassy-saturate: 140%;
   --glassy-tint-album: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.5);
-  --glassy-tint-low: rgba(12, 12, 16, 0.88);
+  --glassy-tint-low: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.88);
   --glassy-border: 1px solid rgba(255, 255, 255, 0.12);
   --glassy-radius: 14px;
   --glassy-radius-lg: 18px;

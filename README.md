@@ -19,10 +19,6 @@ Ruri is a client for music player. A fork of [Pear Desktop](https://github.com/p
 >
 > This application is provided "AS IS", and you use it at your own risk. In no event shall the developers or contributors be liable for any claim, damages, or other liability arising from the software or its use.
 
-## Status
-
-Ruri wraps `https://music.youtube.com` in an Electron shell. A glass chrome overlay is on by default (`glassy-theme`). Album-color depth and an artwork backdrop are not in this tree yet.
-
 | | |
 | --- | --- |
 | Product | Ruri |

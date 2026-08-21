@@ -6,26 +6,31 @@ yt-page-navigation-progress {
 #player-page {
   transition:
     transform 300ms,
-    background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) !important;
+    background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) !important;
 }
 
 #nav-bar-background {
   transition:
     opacity 200ms,
-    background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) !important;
+    background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) !important;
 }
 
 #mini-guide-background {
   transition:
     opacity 200ms,
-    background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) !important;
+    background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) !important;
+}
+
+/* The flat sidebar edge belongs to the painted look. With glass on,
+   glassy-theme draws its own hairline there. */
+html[data-album-color-paint='on'] #mini-guide-background {
   border-right: 0px !important;
 }
 
 #guide-wrapper {
   transition:
     opacity 200ms,
-    background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) !important;
+    background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) !important;
 }
 
 #items {
@@ -78,8 +83,9 @@ ytmusic-fullbleed-thumbnail-renderer img {
   mask: linear-gradient(to bottom, #000 0%, #000 50%, transparent 100%);
 }
 
-.background-gradient.style-scope,
-ytmusic-app-layout[is-bauhaus-sidenav-enabled]
+html[data-album-color-paint='on'] .background-gradient.style-scope,
+html[data-album-color-paint='on']
+  ytmusic-app-layout[is-bauhaus-sidenav-enabled]
   #mini-guide-background.ytmusic-app-layout {
   background: var(--ytmusic-background) !important;
 }
@@ -93,7 +99,8 @@ ytmusic-browse-response[has-background]:not([disable-gradient])
   opacity: 0.6;
 }
 
-ytmusic-search-box[is-bauhaus-sidenav-enabled] {
+html[data-album-color-paint='on']
+  ytmusic-search-box[is-bauhaus-sidenav-enabled] {
   --ytmusic-search-background: var(--ytmusic-color-black3) !important;
 }
 

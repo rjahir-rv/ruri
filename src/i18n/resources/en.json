@@ -233,7 +233,8 @@
             "percent": "{{ratio}}%"
           }
         },
-        "enable-seekbar": "Enable seekbar theming"
+        "enable-seekbar": "Enable seekbar theming",
+        "paint-page-background": "Paint page background"
       },
       "name": "Album Color Theme"
     },
