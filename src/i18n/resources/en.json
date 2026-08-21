@@ -595,6 +595,10 @@
       "description": "Makes the volume slider exponential so it's easier to select lower volumes.",
       "name": "Exponential Volume"
     },
+    "glassy-backdrop": {
+      "description": "Blurred album artwork behind the UI. Turn off Transparent Player while this is on.",
+      "name": "Glassy Backdrop"
+    },
     "glassy-theme": {
       "description": "Frosted-glass chrome for navigation, search, menus, and the player bar. Do not enable together with Blur Navigation Bar (double blur).",
       "menu": {

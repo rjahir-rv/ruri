@@ -57,5 +57,29 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     /\u0059\u006f\u0075\u0054\u0075\u0062\u0065 \u004d\u0075\u0073\u0069\u0063/i,
   );
 
+  const page = await app.firstWindow();
+
+  await expect
+    .poll(
+      () => page.evaluate(() => document.documentElement.dataset.glassyBackdrop),
+      { timeout: 30_000 },
+    )
+    .toBe('on');
+
+  const backdrop = await page.evaluate(() => {
+    const html = document.documentElement;
+    const host = document.getElementById('ruri-glassy-backdrop');
+    return {
+      host: Boolean(host),
+      layers: host?.querySelectorAll('.ruri-glassy-backdrop__layer').length ?? 0,
+      ytBg: getComputedStyle(html)
+        .getPropertyValue('--ytmusic-background')
+        .trim(),
+    };
+  });
+  expect(backdrop.host).toBe(true);
+  expect(backdrop.layers).toBe(2);
+  expect(backdrop.ytBg).toBe('transparent');
+
   await app.close();
 });

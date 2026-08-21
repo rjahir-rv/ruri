@@ -254,11 +254,17 @@ export default createPlugin({
     },
     async applyTheme(config: AlbumColorThemeConfig, alpha: number) {
       const glassOn = await window.mainConfig.plugins.isEnabled('glassy-theme');
-      const shouldPaint = config.paintPageBackground && !glassOn;
+      const backdropOn =
+        await window.mainConfig.plugins.isEnabled('glassy-backdrop');
+      const shouldPaint = config.paintPageBackground && !glassOn && !backdropOn;
 
-      if (config.paintPageBackground && glassOn && !this.warnedGlassPaint) {
+      if (
+        config.paintPageBackground &&
+        !shouldPaint &&
+        !this.warnedGlassPaint
+      ) {
         console.warn(
-          'album-color-theme: Glassy Theme is enabled; page background paint is skipped so glass stays visible.',
+          'album-color-theme: Glassy Theme or Glassy Backdrop is enabled; page background paint is skipped so the backdrop stays visible.',
         );
         this.warnedGlassPaint = true;
       }

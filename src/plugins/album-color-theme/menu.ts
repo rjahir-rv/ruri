@@ -12,6 +12,7 @@ export const onMenu = async ({
 }: MenuContext<AlbumColorThemeConfig>) => {
   const config = await getConfig();
   const glassOn = await isEnabled('glassy-theme');
+  const backdropOn = await isEnabled('glassy-backdrop');
 
   return [
     {
@@ -42,7 +43,7 @@ export const onMenu = async ({
       label: t('plugins.album-color-theme.menu.paint-page-background'),
       type: 'checkbox' as const,
       checked: config.paintPageBackground,
-      enabled: !glassOn,
+      enabled: !glassOn && !backdropOn,
       click(item: Electron.MenuItem) {
         setConfig({ paintPageBackground: item.checked });
       },

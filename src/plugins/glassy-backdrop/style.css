@@ -1,0 +1,114 @@
+/* Overlay is inert unless the renderer set data-glassy-backdrop.
+   Pear does not remove adoptedStyleSheets on plugin unload. */
+
+html[data-glassy-backdrop] {
+  --ruri-backdrop-blur: 48px;
+  --ruri-backdrop-saturate: 1.4;
+  --ruri-backdrop-scale: 1.2;
+  --ruri-backdrop-fade: 550ms;
+  --ruri-backdrop-veil: rgba(0, 0, 0, 0.48);
+}
+
+html[data-glassy-backdrop] #ruri-glassy-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Stack the YTM app above the artwork layer so chrome stays clickable.
+   Transparent fills (below) let backdrop-filter on glass panels sample this. */
+html[data-glassy-backdrop] ytmusic-app {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(var(--ruri-backdrop-scale));
+  filter: blur(var(--ruri-backdrop-blur))
+    saturate(var(--ruri-backdrop-saturate));
+  opacity: 0;
+  transition: opacity var(--ruri-backdrop-fade)
+    var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__layer.is-front {
+  opacity: 1;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--ruri-backdrop-veil);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-glassy-backdrop] .ruri-glassy-backdrop__layer {
+    transition: none;
+  }
+}
+
+/* Low: no live image blur. Solid album wash (or 12,12,16 until color exists).
+   data-glassy-quality is set by glassy-theme; data-glassy-backdrop-quality
+   covers HW-accel-off when the theme plugin is not running. */
+html[data-glassy-backdrop][data-glassy-quality='low']
+  .ruri-glassy-backdrop__layer,
+html[data-glassy-backdrop][data-glassy-backdrop-quality='low']
+  .ruri-glassy-backdrop__layer,
+html[data-glassy-backdrop][data-glassy-quality='low']
+  .ruri-glassy-backdrop__veil,
+html[data-glassy-backdrop][data-glassy-backdrop-quality='low']
+  .ruri-glassy-backdrop__veil {
+  display: none;
+}
+
+html[data-glassy-backdrop][data-glassy-quality='low'] #ruri-glassy-backdrop,
+html[data-glassy-backdrop][data-glassy-backdrop-quality='low']
+  #ruri-glassy-backdrop {
+  background: rgb(var(--ytmusic-album-color-dark, 12, 12, 16));
+}
+
+/* 2026-08 YTM: html / body / ytmusic-app — opaque --ytmusic-background
+   (#030303) covers the window. Without this the artwork never shows.
+   !important: YTM sets these on :root and the app element. */
+html[data-glassy-backdrop],
+html[data-glassy-backdrop] body,
+html[data-glassy-backdrop] ytmusic-app {
+  background: transparent !important;
+  --ytmusic-background: transparent !important;
+}
+
+/* 2026-08 YTM: layout / content / browse-page — page canvas fills.
+   Punch the slabs, not cards or the video. */
+html[data-glassy-backdrop] ytmusic-app-layout,
+html[data-glassy-backdrop] #content,
+html[data-glassy-backdrop] #browse-page {
+  background: transparent !important;
+}
+
+/* 2026-08 YTM: #player-page — full-viewport overlay with an opaque fill
+   that would hide the artwork around the player. Do not touch the <video>.
+   !important: YTM inline/stylesheet background. */
+html[data-glassy-backdrop] #player-page {
+  background: transparent !important;
+}
+
+/* 2026-08 YTM: .background-gradient — album-page wash. One owner of the
+   page background is this plugin. !important: YTM (and album-color-theme
+   while paint is on) assign var(--ytmusic-background) here. */
+html[data-glassy-backdrop] .background-gradient.style-scope {
+  background: transparent !important;
+}
+
+/* 2026-08 YTM: #background.immersive-background — artist/album immersive
+   header art behind browse. Hide so it does not compete with this layer. */
+html[data-glassy-backdrop] #background.immersive-background {
+  opacity: 0 !important;
+}
