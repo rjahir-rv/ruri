@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -13,12 +15,16 @@ const ytmOrigin =
 test('Ruri App - With default settings, app is launched and visible', async () => {
   test.setTimeout(90_000);
 
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ruri-playwright-'));
+
   const app = await electron.launch({
     cwd: appPath,
     env: {
-      HOME: process.env.HOME,
+      HOME: home,
+      XDG_CONFIG_HOME: path.join(home, '.config'),
       DISPLAY: process.env.DISPLAY,
       XAUTHORITY: process.env.XAUTHORITY,
+      XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR,
       PATH: process.env.PATH,
       LANG: process.env.LANG,
       NODE_ENV: 'production',
@@ -57,29 +63,36 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     /\u0059\u006f\u0075\u0054\u0075\u0062\u0065 \u004d\u0075\u0073\u0069\u0063/i,
   );
 
-  const page = await app.firstWindow();
+  const pluginSnapshot = () =>
+    app.evaluate(async ({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (!win) return null;
+      return win.webContents.executeJavaScript(`(() => {
+        const html = document.documentElement;
+        const host = document.getElementById('ruri-glassy-backdrop');
+        const style = getComputedStyle(html);
+        return {
+          attr: html.dataset.glassyBackdrop ?? '',
+          host: Boolean(host),
+          layers:
+            host?.querySelectorAll('.ruri-glassy-backdrop__layer').length ?? 0,
+          ytBg: style.getPropertyValue('--ytmusic-background').trim(),
+          glow: style.getPropertyValue('--glow-color').trim(),
+          inactive: style.getPropertyValue('--lyrics-inactive-opacity').trim(),
+        };
+      })()`);
+    });
 
-  await expect
-    .poll(
-      () => page.evaluate(() => document.documentElement.dataset.glassyBackdrop),
-      { timeout: 30_000 },
-    )
-    .toBe('on');
-
-  const backdrop = await page.evaluate(() => {
-    const html = document.documentElement;
-    const host = document.getElementById('ruri-glassy-backdrop');
-    return {
-      host: Boolean(host),
-      layers: host?.querySelectorAll('.ruri-glassy-backdrop__layer').length ?? 0,
-      ytBg: getComputedStyle(html)
-        .getPropertyValue('--ytmusic-background')
-        .trim(),
-    };
+  // Plugin renderer runs after YTM's document is ready. Query the window
+  // through webContents so we do not sample a Playwright guest frame.
+  await expect.poll(pluginSnapshot, { timeout: 30_000 }).toEqual({
+    attr: 'on',
+    host: true,
+    layers: 2,
+    ytBg: 'transparent',
+    glow: 'rgba(255, 255, 255, 0.5)',
+    inactive: '0.5',
   });
-  expect(backdrop.host).toBe(true);
-  expect(backdrop.layers).toBe(2);
-  expect(backdrop.ytBg).toBe('transparent');
 
   await app.close();
 });

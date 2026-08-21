@@ -9,6 +9,7 @@ html[data-glassy-quality]
     ytmusic-search-box,
     #guide-wrapper,
     #mini-guide-background,
+    #side-panel.ytmusic-player-page,
     ytmusic-menu-popup-renderer,
     tp-yt-paper-listbox,
     tp-yt-paper-dialog
@@ -27,6 +28,7 @@ html[data-glassy-quality]
       ytmusic-search-box,
       #guide-wrapper,
       #mini-guide-background,
+      #side-panel.ytmusic-player-page,
       ytmusic-menu-popup-renderer,
       tp-yt-paper-listbox,
       tp-yt-paper-dialog
@@ -169,6 +171,7 @@ html[data-glassy-quality] tp-yt-iron-dropdown {
 html[data-glassy-quality]
   :is(
     ytmusic-player-queue-item,
+    ytmusic-playlist-panel-video-renderer,
     ytmusic-responsive-list-item-renderer,
     ytmusic-guide-entry-renderer tp-yt-paper-item,
     ytmusic-two-row-item-renderer,

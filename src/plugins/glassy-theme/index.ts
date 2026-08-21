@@ -1,6 +1,7 @@
 import { t } from '@/i18n';
 import { createPlugin } from '@/utils';
 
+import lyrics from './lyrics.css?inline';
 import overlay from './overlay.css?inline';
 import tokens from './tokens.css?inline';
 
@@ -33,7 +34,7 @@ export default createPlugin({
   description: () => t('plugins.glassy-theme.description'),
   restartNeeded: false,
   config: defaultConfig,
-  stylesheets: [tokens, overlay],
+  stylesheets: [tokens, overlay, lyrics],
   menu: async ({ getConfig, setConfig }) => {
     const config = await getConfig();
 
