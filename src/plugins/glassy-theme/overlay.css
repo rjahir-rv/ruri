@@ -225,6 +225,76 @@ html[data-glassy-quality]
   outline-offset: 2px;
 }
 
+/* 2026-08 YTM: #song-image on the player page — round cover + drop
+   shadow so the now-playing side reads closer to a focused lyric view. */
+html[data-glassy-quality] #player-page #song-image,
+html[data-glassy-quality] #player-page ytmusic-player #song-image img,
+html[data-glassy-quality] #player-page #thumbnail img {
+  border-radius: 18px !important;
+}
+
+html[data-glassy-quality] #player-page #song-image,
+html[data-glassy-quality] #player-page yt-img-shadow.ytmusic-player {
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.48);
+}
+
+/* 2026-08 YTM: transport in ytmusic-player-bar. Restyle hit targets;
+   do not replace the custom element (Pear IPC clicks these nodes). */
+html[data-glassy-quality] ytmusic-player-bar .left-controls {
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button) {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  --iron-icon-height: 30px;
+  --iron-icon-width: 30px;
+  --iron-icon-fill-color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button):hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button) {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+  --iron-icon-height: 24px;
+  --iron-icon-width: 24px;
+  --iron-icon-fill-color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.repeat, .shuffle, .like, tp-yt-paper-icon-button.repeat, .volume) {
+  --iron-icon-fill-color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] #progress-bar.ytmusic-player-bar {
+  --paper-slider-height: 3px;
+}
+
+html[data-glassy-quality] ytmusic-player-bar .time-info {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel). */
 html[data-glassy-quality='low']
   :is(

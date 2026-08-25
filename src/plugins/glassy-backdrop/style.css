@@ -43,6 +43,142 @@ html[data-glassy-backdrop] .ruri-glassy-backdrop__layer.is-front {
   opacity: 1;
 }
 
+html[data-glassy-backdrop] .ruri-glassy-backdrop__filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__aqua {
+  display: none;
+  position: absolute;
+  inset: -25%;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Song page: :has() so aqua does not depend on the JS dataset. Polymer
+   reflects player-ui-state_ with a trailing underscore. */
+html[data-glassy-backdrop][data-glassy-aqua]:has(
+    ytmusic-app-layout[player-page-open],
+    ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+  ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
+  .ruri-glassy-backdrop__layer.is-front {
+  filter: url('#ruri-aqua-filter') blur(26px) saturate(1.7);
+  animation: ruri-aqua-drift 10s ease-in-out infinite alternate;
+}
+
+html[data-glassy-backdrop][data-glassy-aqua]:has(
+    ytmusic-app-layout[player-page-open],
+    ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+  ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
+  .ruri-glassy-backdrop__veil {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+html[data-glassy-backdrop][data-glassy-aqua]:has(
+    ytmusic-app-layout[player-page-open],
+    ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+  ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
+  .ruri-glassy-backdrop__aqua {
+  display: block;
+  animation: ruri-aqua-wash 8s ease-in-out infinite alternate;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__wave {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__wave--1 {
+  width: 80%;
+  height: 60%;
+  left: -18%;
+  top: 5%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--ytmusic-album-color, 180, 80, 90), 0.7),
+    transparent 62%
+  );
+  animation: ruri-aqua-wave 7s ease-in-out infinite alternate;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__wave--2 {
+  width: 75%;
+  height: 55%;
+  right: -20%;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--ytmusic-album-color-dark, 80, 20, 30), 0.65),
+    transparent 64%
+  );
+  animation: ruri-aqua-wave 9s ease-in-out infinite alternate-reverse;
+}
+
+html[data-glassy-backdrop] .ruri-glassy-backdrop__wave--3 {
+  width: 55%;
+  height: 45%;
+  left: 22%;
+  top: 30%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.28),
+    transparent 70%
+  );
+  animation: ruri-aqua-wave 6s ease-in-out infinite alternate;
+}
+
+@keyframes ruri-aqua-drift {
+  from {
+    transform: scale(var(--ruri-backdrop-scale)) translate(0, 0);
+  }
+  to {
+    transform: scale(calc(var(--ruri-backdrop-scale) + 0.16)) translate(-4%, 3%);
+  }
+}
+
+@keyframes ruri-aqua-wash {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate(6%, -5%) rotate(10deg);
+  }
+}
+
+@keyframes ruri-aqua-wave {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(12%, -10%) scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-glassy-backdrop] .ruri-glassy-backdrop__layer.is-front,
+  html[data-glassy-backdrop] .ruri-glassy-backdrop__aqua,
+  html[data-glassy-backdrop] .ruri-glassy-backdrop__wave {
+    animation: none !important;
+  }
+
+  html[data-glassy-backdrop] .ruri-glassy-backdrop__filter animate {
+    display: none;
+  }
+}
+
 html[data-glassy-backdrop] .ruri-glassy-backdrop__veil {
   position: absolute;
   inset: 0;

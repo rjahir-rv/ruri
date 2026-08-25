@@ -500,7 +500,7 @@
       }
     },
     "do-not-track": {
-      "description": "Block all tracking out of the box",
+      "description": "Strip in-player ads and optional tracker lists. Default is in-player only.",
       "menu": {
         "blocker": "Blocker"
       },
@@ -596,7 +596,10 @@
       "name": "Exponential Volume"
     },
     "glassy-backdrop": {
-      "description": "Blurred album artwork behind the UI. Turn off Transparent Player while this is on.",
+      "description": "Blurred album artwork behind the UI. Aqua motion runs on the song page only. Turn off Transparent Player while this is on.",
+      "menu": {
+        "aqua": "Aqua motion (song page)"
+      },
       "name": "Glassy Backdrop"
     },
     "glassy-theme": {

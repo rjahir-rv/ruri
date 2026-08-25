@@ -4,8 +4,18 @@
 /* Synced-lyrics writes --lyrics-*-opacity inline on :root from lineEffect.
    !important: that inline assignment otherwise wins and neighbors stay at 0.33. */
 html[data-glassy-quality] {
-  --lyrics-inactive-opacity: 0.5 !important;
+  --lyrics-inactive-opacity: 0.58 !important;
   --lyrics-active-opacity: 1 !important;
+  --lyrics-font-size: var(--glassy-lyric-size) !important;
+  --lyrics-line-height: 1.22 !important;
+  --lyrics-padding: 0.4rem !important;
+  --lyrics-animations: none !important;
+  --lyrics-inactive-font-weight: 600 !important;
+  --lyrics-active-font-weight: 700 !important;
+  --lyrics-inactive-scale: 0.94 !important;
+  --lyrics-active-scale: 1 !important;
+  --lyrics-inactive-offset: 0 !important;
+  --lyrics-active-offset: 0 !important;
 }
 
 /* 2026-08 YTM: #side-panel — right column of ytmusic-player-page
@@ -19,6 +29,9 @@ html[data-glassy-quality] #side-panel.ytmusic-player-page {
   border-radius: var(--glassy-radius-lg);
   box-shadow: var(--glassy-shadow), var(--glassy-highlight);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 html[data-glassy-quality]
@@ -36,12 +49,48 @@ html[data-glassy-quality='high'] #side-panel.ytmusic-player-page {
     saturate(var(--glassy-saturate)) !important;
 }
 
+/* Lyrics tab: drop the glass card so lines sit on the album wash
+   (Apple Music-style). Queue / Related keep the frosted column. */
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(
+    #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
+  ) {
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-page:not([player-ui-state='FULLSCREEN'])
+  #side-panel.ytmusic-player-page:has(
+    #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
+  ) {
+  min-width: 440px;
+  max-width: 720px;
+  width: clamp(440px, 46vw, 720px);
+}
+
 /* 2026-08 YTM: #tab-renderer — fills the side-panel. Keep it clear so
    one frost (the column) samples the backdrop. Do not double-blur. */
 html[data-glassy-quality] #side-panel.ytmusic-player-page #tab-renderer {
   background: transparent !important;
   padding-bottom: 8px;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-glassy-quality] #synced-lyrics-container,
+html[data-glassy-quality] .lyrics-renderer,
+html[data-glassy-quality] .synced-lyrics-vlist {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 /* 2026-08 YTM: side-panel tabs (Up Next, Lyrics, Related).
@@ -403,12 +452,42 @@ html[data-glassy-quality] #synced-lyrics-container .lyric-container {
 html[data-glassy-quality] .synced-line .text-lyrics,
 html[data-glassy-quality] .text-lyrics.description {
   color: var(--glassy-text);
-  transition: color 300ms var(--glassy-ease);
+  transform-origin: 0 50%;
+  transition:
+    color 420ms var(--glassy-ease),
+    filter 480ms var(--glassy-ease),
+    scale 420ms var(--glassy-ease),
+    translate 520ms var(--glassy-ease),
+    opacity 420ms var(--glassy-ease);
 }
 
-html[data-glassy-quality] .synced-line.previous .text-lyrics,
+html[data-glassy-quality] .synced-line.current .text-lyrics {
+  color: #ffffff;
+  filter: blur(0);
+  translate: 0 0;
+}
+
+html[data-glassy-quality] .synced-line.previous .text-lyrics {
+  color: var(--glassy-text-muted);
+  translate: 0 calc(var(--glassy-lyric-rise) * -0.45);
+}
+
 html[data-glassy-quality] .synced-line.upcoming .text-lyrics {
   color: var(--glassy-text-muted);
+  translate: 0 var(--glassy-lyric-rise);
+}
+
+html[data-glassy-quality='high'] .synced-line.previous .text-lyrics {
+  filter: blur(var(--glassy-lyric-blur-prev));
+}
+
+html[data-glassy-quality='high'] .synced-line.upcoming .text-lyrics {
+  filter: blur(var(--glassy-lyric-blur-next));
+}
+
+html[data-glassy-quality] .current .text-lyrics > span > span {
+  animation: none !important;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* 2026-08 Pear: .romaji — --ytmusic-text-secondary with !important. */
@@ -428,11 +507,17 @@ html[data-glassy-quality] #synced-lyrics-container pre {
   html[data-glassy-quality] .synced-line .text-lyrics,
   html[data-glassy-quality] .text-lyrics.description {
     transition: none;
+    filter: none !important;
+    translate: 0 !important;
   }
 
   html[data-glassy-quality] .current .text-lyrics > span > span {
     animation: none;
   }
+}
+
+html[data-glassy-quality='low'] .synced-line .text-lyrics {
+  filter: none !important;
 }
 
 /* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel). */

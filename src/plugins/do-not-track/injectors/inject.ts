@@ -34,15 +34,34 @@ export const inject = (contextBridge: ContextBridge): void => {
   injected = true;
   {
     const pruner = (o: PrunableResponse): PrunableResponse => {
+      if (!o || typeof o !== 'object' || Array.isArray(o)) {
+        return o;
+      }
+
+      // Only touch YTM player payloads. Lyrics (LRCLib / store clones)
+      // also go through JSON.parse in the page and must stay intact.
+      if (
+        !('playerAds' in o) &&
+        !('adPlacements' in o) &&
+        !('adSlots' in o) &&
+        !('playerResponse' in o) &&
+        !('ytInitialPlayerResponse' in o)
+      ) {
+        return o;
+      }
+
       delete o.playerAds;
       delete o.adPlacements;
       delete o.adSlots;
-      if (o.playerResponse) {
+      if (o.playerResponse && typeof o.playerResponse === 'object') {
         delete o.playerResponse.playerAds;
         delete o.playerResponse.adPlacements;
         delete o.playerResponse.adSlots;
       }
-      if (o.ytInitialPlayerResponse) {
+      if (
+        o.ytInitialPlayerResponse &&
+        typeof o.ytInitialPlayerResponse === 'object'
+      ) {
         delete o.ytInitialPlayerResponse.playerAds;
         delete o.ytInitialPlayerResponse.adPlacements;
         delete o.ytInitialPlayerResponse.adSlots;

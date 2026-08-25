@@ -82,6 +82,8 @@ test('Ruri App - With default settings, app is launched and visible', async () =
           glassyQuality: html.dataset.glassyQuality ?? '',
           albumColorPaint: html.dataset.albumColorPaint ?? '',
           glassyText: style.getPropertyValue('--glassy-text').trim(),
+          glassyAqua: html.dataset.glassyAqua ?? '',
+          lyricSize: style.getPropertyValue('--glassy-lyric-size').trim(),
         };
       })()`);
     });
@@ -94,11 +96,27 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     layers: 2,
     ytBg: 'transparent',
     glow: 'rgba(255, 255, 255, 0.5)',
-    inactive: '0.5',
+    inactive: '0.58',
     glassyQuality: 'high',
     albumColorPaint: 'off',
     glassyText: '#f4f6fb',
+    glassyAqua: 'on',
+    lyricSize: 'clamp(1.7rem, 2.3vw, 2.75rem)',
   });
+
+  await expect
+    .poll(
+      () =>
+        app.evaluate(async ({ BrowserWindow }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          if (!win) return false;
+          return win.webContents.executeJavaScript(
+            `window.mainConfig.plugins.isEnabled('do-not-track')`,
+          );
+        }),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
 
   await app.close();
 });

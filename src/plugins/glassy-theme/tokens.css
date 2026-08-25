@@ -12,4 +12,8 @@
   --glassy-text: #f4f6fb;
   --glassy-text-muted: #c5cad4;
   --glassy-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --glassy-lyric-size: clamp(1.7rem, 2.3vw, 2.75rem);
+  --glassy-lyric-blur-prev: 5px;
+  --glassy-lyric-blur-next: 7px;
+  --glassy-lyric-rise: 0.75rem;
 }
