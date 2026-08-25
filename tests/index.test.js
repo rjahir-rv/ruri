@@ -79,6 +79,9 @@ test('Ruri App - With default settings, app is launched and visible', async () =
           ytBg: style.getPropertyValue('--ytmusic-background').trim(),
           glow: style.getPropertyValue('--glow-color').trim(),
           inactive: style.getPropertyValue('--lyrics-inactive-opacity').trim(),
+          glassyQuality: html.dataset.glassyQuality ?? '',
+          albumColorPaint: html.dataset.albumColorPaint ?? '',
+          glassyText: style.getPropertyValue('--glassy-text').trim(),
         };
       })()`);
     });
@@ -92,6 +95,9 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     ytBg: 'transparent',
     glow: 'rgba(255, 255, 255, 0.5)',
     inactive: '0.5',
+    glassyQuality: 'high',
+    albumColorPaint: 'off',
+    glassyText: '#f4f6fb',
   });
 
   await app.close();

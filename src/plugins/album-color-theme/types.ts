@@ -14,6 +14,7 @@ export type AlbumColorThemeRenderer = {
     alpha?: number,
     ratioMultiply?: number,
   ): string;
+  publishAlbumColors(): Promise<void>;
   updateColor(alpha: number): Promise<void>;
   applyTheme(config: AlbumColorThemeConfig, alpha: number): Promise<void>;
   applyAlbumColor(playerApi: MusicPlayer): Promise<boolean>;

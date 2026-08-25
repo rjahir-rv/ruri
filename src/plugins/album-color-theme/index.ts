@@ -123,6 +123,7 @@ export default createPlugin({
     lastVideoId: null as string | null,
     fastAverageColor: null as FastAverageColor | null,
     videoDataListener: null as (() => void) | null,
+    layerListener: null as ((event: unknown, id: unknown) => void) | null,
 
     async start({ getConfig }) {
       const config = await getConfig();
@@ -131,6 +132,22 @@ export default createPlugin({
         config,
         this.lastAlpha,
       );
+
+      const onLayerChange = (_event: unknown, id: unknown) => {
+        if (id !== 'glassy-theme' && id !== 'glassy-backdrop') return;
+        const pluginConfig = this.pluginConfig;
+        if (!pluginConfig) return;
+        const renderer = this as AlbumColorThemeRenderer;
+        renderer
+          .publishAlbumColors()
+          .then(() => renderer.applyTheme(pluginConfig, this.lastAlpha))
+          .catch(console.error);
+      };
+      this.layerListener = onLayerChange;
+      // Preload listener so stop() can removeListener without
+      // wiping renderer.ts handlers on the same channels.
+      window.ipcRenderer.on('plugin:enable', onLayerChange);
+      window.ipcRenderer.on('plugin:unload', onLayerChange);
     },
     async onPlayerApiReady(playerApi, { getConfig }) {
       this.fastAverageColor = new FastAverageColor();
@@ -184,15 +201,8 @@ export default createPlugin({
           this.darkColor = this.darkColor?.darken(0.05);
         }
 
-        document.documentElement.style.setProperty(
-          COLOR_KEY,
-          `${~~this.color.red()}, ${~~this.color.green()}, ${~~this.color.blue()}`,
-        );
-        document.documentElement.style.setProperty(
-          DARK_COLOR_KEY,
-          `${~~this.darkColor.red()}, ${~~this.darkColor.green()}, ${~~this.darkColor.blue()}`,
-        );
         this.lastVideoId = videoId;
+        await (this as AlbumColorThemeRenderer).publishAlbumColors();
       } else if (!this.color) {
         document.documentElement.style.setProperty(COLOR_KEY, '0, 0, 0');
         document.documentElement.style.setProperty(DARK_COLOR_KEY, '0, 0, 0');
@@ -228,6 +238,34 @@ export default createPlugin({
       await (this as AlbumColorThemeRenderer).applyTheme(
         config,
         this.lastAlpha,
+      );
+    },
+    async publishAlbumColors() {
+      if (!this.color || !this.darkColor) return;
+
+      const glassOn = await window.mainConfig.plugins.isEnabled('glassy-theme');
+      const backdropOn =
+        await window.mainConfig.plugins.isEnabled('glassy-backdrop');
+
+      // Glass tint uses --ytmusic-album-color-dark at ~68% over artwork.
+      // Clamp relative luminance so #f4f6fb stays ≥ 4.5:1. Seekbar still
+      // uses --ytmusic-album-color (loop above, luminosity ≤ 0.5).
+      let dark = this.darkColor;
+      if (glassOn || backdropOn) {
+        let steps = 0;
+        while (dark.luminosity() > 0.18 && steps < 24) {
+          dark = dark.darken(0.05);
+          steps += 1;
+        }
+      }
+
+      document.documentElement.style.setProperty(
+        COLOR_KEY,
+        `${~~this.color.red()}, ${~~this.color.green()}, ${~~this.color.blue()}`,
+      );
+      document.documentElement.style.setProperty(
+        DARK_COLOR_KEY,
+        `${~~dark.red()}, ${~~dark.green()}, ${~~dark.blue()}`,
       );
     },
     getMixedColor(
@@ -313,6 +351,13 @@ export default createPlugin({
         document.removeEventListener('videodatachange', this.videoDataListener);
         this.videoDataListener = null;
       }
+      if (this.layerListener) {
+        window.ipcRenderer.removeListener('plugin:enable', this.layerListener);
+        window.ipcRenderer.removeListener('plugin:unload', this.layerListener);
+        this.layerListener = null;
+      }
+      this.fastAverageColor?.destroy();
+      this.fastAverageColor = null;
       delete document.documentElement.dataset.albumColorPaint;
       document.documentElement.style.removeProperty(COLOR_KEY);
       document.documentElement.style.removeProperty(DARK_COLOR_KEY);

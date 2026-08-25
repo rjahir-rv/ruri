@@ -47,34 +47,34 @@ ytmusic-app-layout
   margin-top: calc(-90px + var(--menu-bar-height, 0px)) !important;
 }
 
-/* fix icon color */
-
-.duration.ytmusic-player-queue-item,
-.byline.ytmusic-player-queue-item {
+/* 0.5-white chrome belongs to the painted page look. With glass on,
+   glassy-theme owns player-bar / queue text via --glassy-text*. */
+html[data-album-color-paint='on'] .duration.ytmusic-player-queue-item,
+html[data-album-color-paint='on'] .byline.ytmusic-player-queue-item {
   color: rgba(255, 255, 255, 0.5) !important;
   --yt-endpoint-color: rgba(255, 255, 255, 0.5) !important;
   --yt-endpoint-hover-color: rgba(255, 255, 255, 0.5) !important;
   --yt-endpoint-visited-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.icon.ytmusic-menu-navigation-item-renderer {
+html[data-album-color-paint='on'] .icon.ytmusic-menu-navigation-item-renderer {
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.menu.ytmusic-player-bar {
+html[data-album-color-paint='on'] .menu.ytmusic-player-bar {
   --iron-icon-fill-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-ytmusic-player-bar {
+html[data-album-color-paint='on'] ytmusic-player-bar {
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.time-info.ytmusic-player-bar {
+html[data-album-color-paint='on'] .time-info.ytmusic-player-bar {
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
-.volume-slider.ytmusic-player-bar,
-.expand-volume-slider.ytmusic-player-bar {
+html[data-album-color-paint='on'] .volume-slider.ytmusic-player-bar,
+html[data-album-color-paint='on'] .expand-volume-slider.ytmusic-player-bar {
   --paper-slider-container-color: rgba(255, 255, 255, 0.5) !important;
 }
 

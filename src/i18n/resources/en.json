@@ -605,7 +605,8 @@
         "quality": {
           "high": "High (blur)",
           "label": "Quality",
-          "low": "Low (solid tint)"
+          "low": "Low (solid tint)",
+          "low-forced": "Low (hardware acceleration off)"
         }
       },
       "name": "Glassy Theme"

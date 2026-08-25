@@ -71,6 +71,28 @@ html[data-glassy-quality] #player-bar-background {
 
 html[data-glassy-quality] ytmusic-player-bar {
   background: transparent !important;
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.title, yt-formatted-string.title, #song-title) {
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.subtitle, .byline, .time-info, yt-formatted-string.byline) {
+  color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] .menu.ytmusic-player-bar {
+  --iron-icon-fill-color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] .volume-slider.ytmusic-player-bar,
+html[data-glassy-quality] .expand-volume-slider.ytmusic-player-bar {
+  --paper-slider-container-color: var(--glassy-text-muted);
 }
 
 html[data-glassy-quality='high'] #player-bar-background {
@@ -191,9 +213,15 @@ html[data-glassy-quality]
     ytmusic-search-box,
     ytmusic-guide-entry-renderer,
     tp-yt-paper-item,
-    ytmusic-menu-navigation-item-renderer
+    ytmusic-menu-navigation-item-renderer,
+    ytmusic-player-bar tp-yt-paper-icon-button,
+    ytmusic-player-bar .play-pause-button,
+    #side-panel.ytmusic-player-page tp-yt-paper-tab,
+    ytmusic-chip-cloud-chip-renderer,
+    .lyrics-picker mdui-button-icon,
+    .lyrics-picker button
   ):focus-visible {
-  outline: 2px solid rgba(244, 246, 251, 0.55);
+  outline: 2px solid rgba(244, 246, 251, 0.75);
   outline-offset: 2px;
 }
 

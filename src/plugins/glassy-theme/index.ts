@@ -2,6 +2,7 @@ import { t } from '@/i18n';
 import { createPlugin } from '@/utils';
 
 import lyrics from './lyrics.css?inline';
+import { onMenu } from './menu';
 import overlay from './overlay.css?inline';
 import tokens from './tokens.css?inline';
 
@@ -35,33 +36,7 @@ export default createPlugin({
   restartNeeded: false,
   config: defaultConfig,
   stylesheets: [tokens, overlay, lyrics],
-  menu: async ({ getConfig, setConfig }) => {
-    const config = await getConfig();
-
-    return [
-      {
-        label: t('plugins.glassy-theme.menu.quality.label'),
-        submenu: [
-          {
-            label: t('plugins.glassy-theme.menu.quality.high'),
-            type: 'radio',
-            checked: config.quality === 'high',
-            click() {
-              setConfig({ quality: 'high' });
-            },
-          },
-          {
-            label: t('plugins.glassy-theme.menu.quality.low'),
-            type: 'radio',
-            checked: config.quality === 'low',
-            click() {
-              setConfig({ quality: 'low' });
-            },
-          },
-        ],
-      },
-    ];
-  },
+  menu: onMenu,
   renderer: {
     async start({ getConfig }) {
       const config = await getConfig();
