@@ -37,9 +37,9 @@ html[data-glassy-quality] #side-panel.ytmusic-player-page {
 html[data-glassy-quality]
   ytmusic-player-page:not([player-ui-state='FULLSCREEN'])
   #side-panel.ytmusic-player-page {
-  min-width: 420px;
-  max-width: 560px;
-  width: clamp(420px, 38vw, 560px);
+  min-width: 440px;
+  max-width: 720px;
+  width: clamp(440px, 46vw, 720px);
   margin: 12px 18px 18px 0;
 }
 
@@ -62,16 +62,6 @@ html[data-glassy-quality]
   -webkit-backdrop-filter: none !important;
 }
 
-html[data-glassy-quality]
-  ytmusic-player-page:not([player-ui-state='FULLSCREEN'])
-  #side-panel.ytmusic-player-page:has(
-    #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
-  ) {
-  min-width: 440px;
-  max-width: 720px;
-  width: clamp(440px, 46vw, 720px);
-}
-
 /* 2026-08 YTM: #tab-renderer — fills the side-panel. Keep it clear so
    one frost (the column) samples the backdrop. Do not double-blur. */
 html[data-glassy-quality] #side-panel.ytmusic-player-page #tab-renderer {
@@ -83,6 +73,38 @@ html[data-glassy-quality] #side-panel.ytmusic-player-page #tab-renderer {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+/* 2026-08 YTM: every tab (Up Next, Related, comments) scrolls inside
+   #tab-renderer, so the horizontal inset belongs here — once. Deriving it
+   per renderer is what let the queue rows, the "Playing from" line and the
+   Related shelves each settle on a different left edge.
+   Lyrics opt out: that tab is full-bleed and insets .lyric-container itself. */
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page
+  #tab-renderer:not([page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']) {
+  padding-inline: var(--side-panel-inset);
+}
+
+/* Related / comments shelves ship their own horizontal margins, which would
+   stack on top of the inset above. Zero them and let the container own it. */
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page
+  #tab-renderer:not([page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'])
+  :is(
+    ytmusic-section-list-renderer,
+    ytmusic-item-section-renderer,
+    ytmusic-shelf-renderer,
+    ytmusic-carousel-shelf-renderer,
+    ytmusic-carousel-shelf-basic-header-renderer,
+    ytmusic-comments-header-renderer,
+    ytmusic-comment-thread-renderer,
+    ytmusic-comment-renderer,
+    ytmusic-message-renderer
+  ) {
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  box-sizing: border-box;
 }
 
 html[data-glassy-quality] #synced-lyrics-container,
@@ -131,7 +153,7 @@ html[data-glassy-quality]
     ytmusic-player-queue #top-bar,
     .header.ytmusic-playlist-panel-renderer
   ) {
-  padding: 14px var(--side-panel-inset) 8px !important;
+  padding: 14px 0 8px !important;
   box-sizing: border-box !important;
 }
 
@@ -156,7 +178,7 @@ html[data-glassy-quality]
   align-items: center !important;
   justify-content: space-between !important;
   gap: 12px !important;
-  padding-right: var(--side-panel-inset) !important;
+  padding-right: 0 !important;
   box-sizing: border-box !important;
 }
 
@@ -187,7 +209,7 @@ html[data-glassy-quality]
   font-weight: 500 !important;
   line-height: 1.3 !important;
   margin: 0 0 2px !important;
-  padding-left: var(--side-panel-inset) !important;
+  padding-left: 0 !important;
   box-sizing: border-box !important;
 }
 
@@ -206,7 +228,7 @@ html[data-glassy-quality]
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  padding-left: var(--side-panel-inset) !important;
+  padding-left: 0 !important;
   box-sizing: border-box !important;
 }
 
@@ -215,7 +237,7 @@ html[data-glassy-quality]
   #side-panel.ytmusic-player-page
   ytmusic-playlist-panel-header-renderer
   :is(.action-buttons, #action-buttons, .actions) {
-  margin: 0 var(--side-panel-inset) 0 0 !important;
+  margin: 0 !important;
   padding: 0 !important;
   flex-shrink: 0 !important;
   display: flex !important;
@@ -242,7 +264,7 @@ html[data-glassy-quality]
 html[data-glassy-quality]
   #side-panel.ytmusic-player-page
   ytmusic-chip-cloud-renderer {
-  padding: 4px var(--side-panel-inset) 12px !important;
+  padding: 4px 0 12px !important;
   margin: 0 !important;
   gap: 8px !important;
   box-sizing: border-box !important;
@@ -288,7 +310,7 @@ html[data-glassy-quality]
 html[data-glassy-quality]
   #side-panel.ytmusic-player-page
   :is(ytmusic-player-queue-item, ytmusic-playlist-panel-video-renderer) {
-  margin: 4px var(--side-panel-inset) !important;
+  margin: 4px -10px !important;
   padding: 8px 10px !important;
   border-radius: var(--glassy-radius) !important;
   box-sizing: border-box;
@@ -356,8 +378,7 @@ html[data-glassy-quality]
     ytmusic-playlist-panel-video-renderer[selected],
     ytmusic-playlist-panel-video-renderer[play-button-state='playing']
   ) {
-  background: rgba(255, 255, 255, 0.09) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 html[data-glassy-quality]
@@ -375,7 +396,7 @@ html[data-glassy-quality]
 html[data-glassy-quality]
   #side-panel.ytmusic-player-page
   ytmusic-responsive-list-item-renderer {
-  margin: 2px var(--side-panel-inset);
+  margin: 2px -10px !important;
   padding: 6px 10px !important;
   border-radius: var(--glassy-radius);
   box-sizing: border-box;
@@ -418,7 +439,9 @@ html[data-glassy-quality] #side-panel ::-webkit-scrollbar-thumb:hover {
 
 /* 2026-08 Pear: .lyrics-picker — plugin uses sticky + relative top via
    --lyrics-picker-top. That top offset can park the bar mid-panel over
-   lyrics. Pin the wrapper to the tab top and ignore the offset. */
+   lyrics. Pin the wrapper to the tab top and ignore the offset.
+   The scrim fades scrolling lines out under the pill, which no longer
+   spans the panel. */
 html[data-glassy-quality]
   #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
   div:has(> .lyrics-picker) {
@@ -426,22 +449,130 @@ html[data-glassy-quality]
   top: 0 !important;
   z-index: 3;
   flex-shrink: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.6) 0%,
+    rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0) 100%
+  );
 }
 
+/* The plugin ships a 5em full-bleed bar and its provider label inherits
+   .description (1.4rem !important), so it reads as a page header rather
+   than a control. Rebuild it as a compact pill on the side-panel scale. */
 html[data-glassy-quality] div:has(> .lyrics-picker) > .lyrics-picker {
-  background: var(--glassy-tint-album);
-  border-bottom: var(--glassy-border);
   position: relative;
   top: 0 !important;
-  height: 3.25rem;
-  padding: 6px 12px;
+  width: fit-content;
+  height: auto;
+  margin: 6px auto 10px;
+  padding: 3px 5px;
+  gap: 2px;
+  justify-content: center;
+  background: var(--glassy-tint-album);
+  border: var(--glassy-border);
+  border-radius: 999px;
+  box-shadow: var(--glassy-shadow), var(--glassy-highlight);
   box-sizing: border-box;
+  opacity: 0.82;
+  transition: opacity 200ms var(--glassy-ease);
+}
+
+html[data-glassy-quality] div:has(> .lyrics-picker) > .lyrics-picker:hover,
+html[data-glassy-quality]
+  div:has(> .lyrics-picker)
+  > .lyrics-picker:focus-within {
+  opacity: 1;
 }
 
 html[data-glassy-quality='high'] div:has(> .lyrics-picker) > .lyrics-picker {
   backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate));
   -webkit-backdrop-filter: blur(var(--glassy-blur))
     saturate(var(--glassy-saturate));
+}
+
+/* The label is a sliding carousel: items are min-width:100% inside an
+   overflow:hidden viewport, so this needs a definite width. */
+html[data-glassy-quality] .lyrics-picker .lyrics-picker-content {
+  width: 158px;
+  gap: 3px;
+}
+
+html[data-glassy-quality] .lyrics-picker .lyrics-picker-item {
+  gap: 4px;
+  min-height: 20px;
+}
+
+/* !important: style.css sets .description to clamp(1.4rem, …) / text-align:left. */
+html[data-glassy-quality] .lyrics-picker-item yt-formatted-string.description {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.4px !important;
+  line-height: 1.2 !important;
+  color: var(--glassy-text) !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+html[data-glassy-quality] .lyrics-picker mdui-button-icon {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 16px !important;
+  border-radius: 50%;
+  color: var(--glassy-text-muted);
+  transition: color 200ms var(--glassy-ease);
+}
+
+html[data-glassy-quality] .lyrics-picker mdui-button-icon:hover {
+  color: var(--glassy-text);
+}
+
+/* !important: LitElementWrapper writes padding/scale inline on every icon. */
+html[data-glassy-quality]
+  .lyrics-picker
+  :is(
+    mdui-icon-chevron-left,
+    mdui-icon-chevron-right,
+    mdui-icon-star,
+    mdui-icon-star-border,
+    mdui-icon-error,
+    mdui-icon-check-circle,
+    mdui-icon-warning
+  ) {
+  font-size: 15px !important;
+  padding: 0 !important;
+  scale: 1 !important;
+}
+
+html[data-glassy-quality] .lyrics-picker tp-yt-paper-spinner-lite {
+  width: 14px !important;
+  height: 14px !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+/* UA gives <ul> a 40px inline start padding, which would throw the dots
+   off-centre now that the pill is only as wide as its content. */
+html[data-glassy-quality] .lyrics-picker .lyrics-picker-content-dots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+}
+
+/* No background here: the dot's white/black fill is set inline per index. */
+html[data-glassy-quality] .lyrics-picker .lyrics-picker-dot {
+  width: 4px;
+  height: 4px;
+  margin: 0;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+html[data-glassy-quality]
+  .lyrics-picker
+  :is(.lyrics-picker-left, .lyrics-picker-right) {
+  border-radius: 50%;
 }
 
 html[data-glassy-quality] #synced-lyrics-container .lyric-container {
@@ -453,6 +584,7 @@ html[data-glassy-quality] .synced-line .text-lyrics,
 html[data-glassy-quality] .text-lyrics.description {
   color: var(--glassy-text);
   transform-origin: 0 50%;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
   transition:
     color 420ms var(--glassy-ease),
     filter 480ms var(--glassy-ease),
@@ -495,10 +627,20 @@ html[data-glassy-quality] .text-lyrics > .romaji {
   color: var(--glassy-text-muted) !important;
 }
 
-/* 2026-08 Pear: ErrorDisplay — inline --ytmusic-color-black1 on <pre>. */
+/* 2026-08 Pear: ErrorDisplay — status message on the album wash, with the
+   stack in the collapsible <pre>. */
+html[data-glassy-quality] .lyrics-error-title {
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality] .lyrics-error-message,
+html[data-glassy-quality] .lyrics-error-toggle {
+  color: var(--glassy-text-muted);
+}
+
 html[data-glassy-quality] #synced-lyrics-container pre {
   background: var(--glassy-tint-album) !important;
-  color: var(--glassy-text) !important;
+  color: var(--glassy-text-muted) !important;
   border: var(--glassy-border);
   border-radius: var(--glassy-radius);
 }

@@ -838,8 +838,12 @@
     "synced-lyrics": {
       "description": "Proporciona letras de canciones sincronizadas, utilizando proveedores como LRClib.",
       "errors": {
+        "details": "Detalles técnicos",
         "fetch": "⚠️\tSe produjo un error al obtener la letra.\n\tPor favor, inténtelo de nuevo más tarde.",
-        "not-found": "⚠️ No se han encontrado letras para esta canción."
+        "not-found": "No se encontró la letra de esta canción.",
+        "offline": "Parece que no tienes conexión. Revisa tu red e inténtalo de nuevo.",
+        "provider-failed": "{{provider}} no respondió. Inténtalo de nuevo o cambia de proveedor con las flechas de arriba.",
+        "title": "No se pudo cargar la letra"
       },
       "menu": {
         "convert-chinese-character": {

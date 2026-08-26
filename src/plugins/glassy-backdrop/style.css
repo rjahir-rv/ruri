@@ -80,7 +80,13 @@ html[data-glassy-backdrop][data-glassy-aqua]:has(
     ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
   ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
   .ruri-glassy-backdrop__veil {
-  background: rgba(0, 0, 0, 0.22);
+  background:
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(0, 0, 0, 0.1) 0%,
+      rgba(0, 0, 0, 0.42) 100%
+    ),
+    rgba(0, 0, 0, 0.3);
 }
 
 html[data-glassy-backdrop][data-glassy-aqua]:has(
@@ -182,7 +188,13 @@ html[data-glassy-backdrop] .ruri-glassy-backdrop__wave--3 {
 html[data-glassy-backdrop] .ruri-glassy-backdrop__veil {
   position: absolute;
   inset: 0;
-  background: var(--ruri-backdrop-veil);
+  background:
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(0, 0, 0, 0.12) 0%,
+      rgba(0, 0, 0, 0.48) 100%
+    ),
+    var(--ruri-backdrop-veil);
 }
 
 @media (prefers-reduced-motion: reduce) {

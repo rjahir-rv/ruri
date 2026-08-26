@@ -1,16 +1,14 @@
+import { t } from '@/i18n';
+
+// A bare kaomoji is indistinguishable from a failed load, so say what happened.
 export const NotFoundKaomoji = () => {
   return (
-    <yt-formatted-string
-      class="text-lyrics description ytmusic-description-shelf-renderer"
-      style={{
-        'display': 'inline-flex',
-        'justify-content': 'center',
-        'width': '100%',
-        'user-select': 'none',
-      }}
-      text={{
-        runs: [{ text: '＼(〇_ｏ)／' }],
-      }}
-    />
+    <div class="lyrics-error">
+      <div class="lyrics-error-kaomoji">＼(〇_ｏ)／</div>
+
+      <div class="lyrics-error-message">
+        {t('plugins.synced-lyrics.errors.not-found')}
+      </div>
+    </div>
   );
 };

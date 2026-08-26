@@ -12,7 +12,7 @@ import {
 } from '../providers';
 import { providers } from '../providers/renderer';
 
-import type { LyricProvider } from '../types';
+import type { LyricResult } from '../types';
 import type { SongInfo } from '@/providers/song-info';
 
 type LyricsStore = {
@@ -48,132 +48,119 @@ export const currentLyrics = runWithOwner(reactiveOwner, () =>
 type VideoId = string;
 
 type SearchCacheData = Record<ProviderName, ProviderState>;
-interface SearchCache {
-  state: 'loading' | 'done';
-  data: SearchCacheData;
-}
+
+// A provider result is only worth keeping if the search actually completed.
+// `error` (network blip, YTM shell not ready yet, rate limited proxy, ...) and
+// `fetching` are transient, so they must be retried instead of being served
+// from the cache as if they were a definitive "no lyrics for this song".
+const isRetryable = (state: ProviderState) =>
+  state.state === 'error' || state.state === 'fetching';
+
+const cloneResult = (res: LyricResult | null): LyricResult | null =>
+  res
+    ? {
+        ...res,
+        artists: [...res.artists],
+        lines: res.lines?.map((line) => ({ ...line })),
+      }
+    : null;
+
+// The cached entries are handed to solid's store, which would otherwise proxy
+// (and share) the very objects we keep mutating in the cache.
+const cloneState = (state: ProviderState): ProviderState => ({
+  state: state.state,
+  data: cloneResult(state.data),
+  error: state.error,
+});
+
+const cloneCache = (cache: SearchCacheData): SearchCacheData =>
+  providerNames.reduce((acc, name) => {
+    acc[name] = cloneState(cache[name]);
+    return acc;
+  }, {} as SearchCacheData);
 
 // TODO: Maybe use localStorage for the cache.
-const searchCache = new Map<VideoId, SearchCache>();
+const searchCache = new Map<VideoId, SearchCacheData>();
+const inFlight = new Map<VideoId, Promise<unknown>>();
+
+const syncStore = (videoId: VideoId, cache: SearchCacheData) => {
+  if (getSongInfo().videoId !== videoId) return;
+  setLyricsStore('lyrics', () => cloneCache(cache));
+};
+
+const searchProvider = async (
+  videoId: VideoId,
+  providerName: ProviderName,
+  cache: SearchCacheData,
+  info: SongInfo,
+) => {
+  let result: ProviderState;
+
+  try {
+    const data = await providers[providerName].search(info);
+    result = { state: 'done', data, error: null };
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error(
+      `[synced-lyrics] ${providerName} failed for ${videoId}`,
+      error,
+    );
+    result = { state: 'error', data: null, error };
+  }
+
+  cache[providerName] = result;
+
+  if (getSongInfo().videoId === videoId) {
+    setLyricsStore('lyrics', providerName, cloneState(result));
+  }
+};
+
 export const fetchLyrics = (info: SongInfo) => {
-  if (searchCache.has(info.videoId)) {
-    const cache = searchCache.get(info.videoId)!;
+  const { videoId } = info;
 
-    if (cache.state === 'loading') {
-      setTimeout(() => {
-        fetchLyrics(info);
-      });
-      return;
-    }
+  const cached = searchCache.get(videoId);
 
-    if (getSongInfo().videoId === info.videoId) {
-      setLyricsStore('lyrics', () => {
-        // weird bug with solid-js
-        return JSON.parse(JSON.stringify(cache.data)) as typeof cache.data;
-      });
-    }
-
+  // A search for this song is already running; just make sure the panel shows
+  // whatever it has so far instead of busy-looping until it finishes.
+  if (inFlight.has(videoId)) {
+    if (cached) syncStore(videoId, cached);
     return;
   }
 
-  const cache: SearchCache = {
-    state: 'loading',
-    data: initialData(),
-  };
+  const cache = cached ?? initialData();
+  searchCache.set(videoId, cache);
 
-  searchCache.set(info.videoId, cache);
-  if (getSongInfo().videoId === info.videoId) {
-    setLyricsStore('lyrics', () => {
-      // weird bug with solid-js
-      return JSON.parse(JSON.stringify(cache.data)) as typeof cache.data;
-    });
+  const pending = providerNames.filter((name) => isRetryable(cache[name]));
+  if (!pending.length) {
+    syncStore(videoId, cache);
+    return;
   }
 
-  const tasks: Promise<void>[] = [];
-
-  // prettier-ignore
-  for (
-    const [providerName, provider] of Object.entries(providers) as [
-    ProviderName,
-    LyricProvider,
-  ][]
-    ) {
-    const pCache = cache.data[providerName];
-
-    tasks.push(
-      provider
-        .search(info)
-        .then((res) => {
-          pCache.state = 'done';
-          pCache.data = res;
-
-          if (getSongInfo().videoId === info.videoId) {
-            setLyricsStore('lyrics', (old) => {
-              return {
-                ...old,
-                [providerName]: {
-                  state: 'done',
-                  data: res ? { ...res } : null,
-                  error: null,
-                },
-              };
-            });
-          }
-        })
-        .catch((error: Error) => {
-          pCache.state = 'error';
-          pCache.error = error;
-
-          console.error(error);
-
-          if (getSongInfo().videoId === info.videoId) {
-            setLyricsStore('lyrics', (old) => {
-              return {
-                ...old,
-                [providerName]: { state: 'error', error, data: null },
-              };
-            });
-          }
-        }),
-    );
+  for (const name of pending) {
+    cache[name] = { state: 'fetching', data: null, error: null };
   }
 
-  Promise.allSettled(tasks).then(() => {
-    cache.state = 'done';
-    searchCache.set(info.videoId, cache);
+  syncStore(videoId, cache);
+
+  const task = Promise.allSettled(
+    pending.map((name) => searchProvider(videoId, name, cache, info)),
+  ).then(() => {
+    inFlight.delete(videoId);
   });
+
+  inFlight.set(videoId, task);
 };
 
 export const retrySearch = (provider: ProviderName, info: SongInfo) => {
-  setLyricsStore('lyrics', (old) => {
-    const pCache = {
-      state: 'fetching',
-      data: null,
-      error: null,
-    };
+  const { videoId } = info;
 
-    return {
-      ...old,
-      [provider]: pCache,
-    };
-  });
+  const cache = searchCache.get(videoId) ?? initialData();
+  searchCache.set(videoId, cache);
 
-  providers[provider]
-    .search(info)
-    .then((res) => {
-      setLyricsStore('lyrics', (old) => {
-        return {
-          ...old,
-          [provider]: { state: 'done', data: res, error: null },
-        };
-      });
-    })
-    .catch((error) => {
-      setLyricsStore('lyrics', (old) => {
-        return {
-          ...old,
-          [provider]: { state: 'error', data: null, error },
-        };
-      });
-    });
+  cache[provider] = { state: 'fetching', data: null, error: null };
+  if (getSongInfo().videoId === videoId) {
+    setLyricsStore('lyrics', provider, cloneState(cache[provider]));
+  }
+
+  searchProvider(videoId, provider, cache, info).catch(() => {});
 };

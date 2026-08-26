@@ -37,26 +37,34 @@ html[data-glassy-quality]
   }
 }
 
-/* 2026-08 YTM: #nav-bar-background — sibling of ytmusic-nav-bar; YTM paints
-   it opaque and sets opacity 0 until .content-scrolled. Force a visible frost
-   so chrome is glass at rest. Do not change height (in-app-menu math).
-   !important: YTM inline/stylesheet background and opacity win otherwise. */
+/* 2026-08 YTM: #nav-bar-background — sibling of ytmusic-nav-bar. YTM paints
+   an opaque strip (and a #nav-bar-divider hairline) that reads as a separate
+   panel over the backdrop. Punch it so logo + search sit on the page wash.
+   Keep opacity 1 so YTM does not hide the node; keep height (in-app-menu math).
+   !important: YTM inline/stylesheet background, border, and opacity win. */
 html[data-glassy-quality] #nav-bar-background {
-  background: var(--glassy-tint-album) !important;
+  background: transparent !important;
   opacity: 1 !important;
-  border-bottom: var(--glassy-border);
-  box-shadow: var(--glassy-highlight);
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none;
 }
 
 html[data-glassy-quality='high'] #nav-bar-background {
-  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate)) !important;
-  -webkit-backdrop-filter: blur(var(--glassy-blur))
-    saturate(var(--glassy-saturate)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality] ytmusic-nav-bar {
+  background: transparent !important;
 }
 
 /* 2026-08 YTM: #nav-bar-divider — hairline under the nav. */
 html[data-glassy-quality] #nav-bar-divider {
-  background: rgba(255, 255, 255, 0.12);
+  display: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  border: none !important;
 }
 
 /* 2026-08 YTM: #player-bar-background + ytmusic-player-bar — YTM paints both
@@ -101,38 +109,157 @@ html[data-glassy-quality='high'] #player-bar-background {
     saturate(var(--glassy-saturate)) !important;
 }
 
-/* 2026-08 YTM: ytmusic-search-box — field in the nav. --ytmusic-search-background
-   is the fill YTM uses (also set opaque by album-color-theme). */
+/* 2026-08 YTM: ytmusic-search-box — field in the nav. Host used to be a
+   raised glass card (border + drop shadow + overflow:hidden) which clipped
+   the input and hid #suggestions / #suggestion-list. Sit flush in the nav;
+   glass lives on the dropdown, not the idle field.
+   !important on host fill/border/shadow: YTM (and bauhaus) paint those on
+   the custom element. --ytmusic-search-background inherits into shady DOM. */
 html[data-glassy-quality] ytmusic-search-box {
   --ytmusic-search-background: transparent;
+  --iron-icon-fill-color: var(--glassy-text-muted);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+  border-radius: var(--glassy-search-radius);
+}
+
+html[data-glassy-quality] ytmusic-search-box .search-box,
+html[data-glassy-quality] .search-box.ytmusic-search-box {
+  /* !important: YTM paints an opaque fill on .search-box once [opened]. */
+  background: var(--glassy-search-fill) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--glassy-search-radius);
+  box-shadow: var(--glassy-highlight);
+  backdrop-filter: blur(12px) saturate(var(--glassy-saturate));
+  -webkit-backdrop-filter: blur(12px) saturate(var(--glassy-saturate));
+}
+
+html[data-glassy-quality] ytmusic-search-box:not([opened]) .search-box:hover,
+html[data-glassy-quality]
+  ytmusic-search-box:not([opened])
+  .search-box.ytmusic-search-box:hover {
+  background: var(--glassy-hover) !important;
+}
+
+html[data-glassy-quality] ytmusic-search-box #input {
+  color: var(--glassy-text);
+  caret-color: var(--glassy-text);
+}
+
+html[data-glassy-quality] ytmusic-search-box #input::placeholder {
+  color: var(--glassy-text-muted);
+}
+
+/* 2026-08 YTM: opened search — native dropdown (#suggestions, bauhaus
+   #suggestion-list, .search-container). Keep the field in the nav; frost
+   only the panel that hangs below. z-index above #nav-bar-background (3). */
+html[data-glassy-quality] ytmusic-search-box[opened] {
+  overflow: visible;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 6;
+  app-region: no-drag;
+}
+
+html[data-glassy-quality] ytmusic-nav-bar:has(ytmusic-search-box[opened]),
+html[data-glassy-quality]
+  ytmusic-nav-bar:has(ytmusic-search-box[opened])
+  .center-content {
+  overflow: visible;
+  z-index: 5;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] .search-container,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  .search-container.ytmusic-search-box {
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality] ytmusic-search-box[opened] #suggestion-list {
+  background:
+    linear-gradient(var(--glassy-search-scrim), var(--glassy-search-scrim)),
+    var(--glassy-search-panel) !important;
   border: var(--glassy-border);
-  border-radius: var(--glassy-radius);
+  border-radius: var(--glassy-radius-lg);
   box-shadow: var(--glassy-shadow), var(--glassy-highlight);
-  overflow: hidden;
+  isolation: isolate;
+  margin-top: 6px;
+  color: var(--glassy-text);
 }
 
-html[data-glassy-quality] ytmusic-search-box .search-box {
-  background: var(--glassy-tint-album);
-}
-
-html[data-glassy-quality='high'] ytmusic-search-box .search-box {
-  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate));
-  -webkit-backdrop-filter: blur(var(--glassy-blur))
+html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestion-list {
+  backdrop-filter: blur(var(--glassy-search-blur))
+    saturate(var(--glassy-saturate));
+  -webkit-backdrop-filter: blur(var(--glassy-search-blur))
     saturate(var(--glassy-saturate));
 }
 
-/* 2026-08 YTM: search suggestions (opened box / suggestion sections). */
-html[data-glassy-quality] ytmusic-search-box[opened],
+/* Nested wrappers share one frost. Inner sections stay clear so rows
+   sit on the panel, not a stack of cards. */
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  #suggestions
+  #suggestion-list,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  #suggestion-list
+  #suggestions,
 html[data-glassy-quality] ytmusic-search-suggestions-section {
-  background: var(--glassy-tint-album);
-  border-radius: var(--glassy-radius);
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  margin-top: 0;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-html[data-glassy-quality='high'] ytmusic-search-box[opened],
-html[data-glassy-quality='high'] ytmusic-search-suggestions-section {
-  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate));
-  -webkit-backdrop-filter: blur(var(--glassy-blur))
-    saturate(var(--glassy-saturate));
+html[data-glassy-quality]
+  ytmusic-search-box[is-bauhaus-sidenav-enabled]
+  #suggestion-list {
+  padding: 8px 0 !important;
+  border-top: none;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] ytmusic-search-suggestion,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  ytmusic-responsive-list-item-renderer {
+  background: transparent !important;
+  color: var(--glassy-text);
+  text-shadow: var(--glassy-text-shadow);
+}
+
+@keyframes glassy-search-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  :is(#suggestions, #suggestion-list) {
+  animation: glassy-search-drop 180ms var(--glassy-appear) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-glassy-quality]
+    ytmusic-search-box[opened]
+    :is(#suggestions, #suggestion-list) {
+    animation: none;
+  }
 }
 
 /* 2026-08 YTM: #search-page sticky tabs. */
@@ -147,19 +274,44 @@ html[data-glassy-quality='high'] #search-page #tabs.stuck {
     saturate(var(--glassy-saturate));
 }
 
-/* 2026-08 YTM: #guide-wrapper / #mini-guide-background — side chrome.
-   !important: YTM (and album-color-theme) assign opaque backgrounds here. */
+/* 2026-08 YTM: #guide-wrapper / #mini-guide-background — same punch as the
+   nav: YTM (and bauhaus) paint an opaque column with a right hairline.
+   Entries keep hover; the column itself sits on the backdrop.
+   !important: YTM stylesheet/inline background and border-right. */
 html[data-glassy-quality] #guide-wrapper,
 html[data-glassy-quality] #mini-guide-background {
-  background: var(--glassy-tint-album) !important;
-  border-right: var(--glassy-border);
+  background: transparent !important;
+  border: none !important;
+  border-right: none !important;
+  box-shadow: none;
 }
 
 html[data-glassy-quality='high'] #guide-wrapper,
 html[data-glassy-quality='high'] #mini-guide-background {
-  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate)) !important;
-  -webkit-backdrop-filter: blur(var(--glassy-blur))
-    saturate(var(--glassy-saturate)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality] ytmusic-guide-renderer,
+html[data-glassy-quality] ytmusic-guide-renderer[is-collapsed],
+html[data-glassy-quality] ytmusic-guide-section-renderer,
+html[data-glassy-quality] #guide-content,
+html[data-glassy-quality] #items.ytmusic-guide-section-renderer,
+html[data-glassy-quality] tp-yt-app-drawer,
+html[data-glassy-quality] tp-yt-app-drawer #contentContainer {
+  background: transparent !important;
+  border-right: none !important;
+}
+
+html[data-glassy-quality] #divider.ytmusic-guide-section-renderer,
+html[data-glassy-quality] ytmusic-guide-renderer #divider {
+  display: none !important;
+}
+
+html[data-glassy-quality] ytmusic-guide-signin-promo-renderer,
+html[data-glassy-quality] ytmusic-guide-signin-promo-renderer[is-collapsed] {
+  border: none !important;
+  border-top: none !important;
 }
 
 /* 2026-08 YTM: menus / dialogs — tp-yt-paper-* and ytmusic-menu-popup-renderer.
@@ -206,6 +358,12 @@ html[data-glassy-quality]
     rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.25);
 }
 
+/* Remove solid background on paper items pseudo-elements */
+html[data-glassy-quality] tp-yt-paper-item::before,
+html[data-glassy-quality] tp-yt-paper-item::after {
+  background: transparent !important;
+}
+
 /* Focus: keep a visible ring on glassy chrome. Do not replace YTM's own
    :focus-visible on the browse canvas. */
 html[data-glassy-quality]
@@ -225,17 +383,49 @@ html[data-glassy-quality]
   outline-offset: 2px;
 }
 
-/* 2026-08 YTM: #song-image on the player page — round cover + drop
-   shadow so the now-playing side reads closer to a focused lyric view. */
+/* 2026-08 YTM: #song-image on the player page — round cover + deep floating
+   drop shadow so the album artwork appears lifted above the glass. */
 html[data-glassy-quality] #player-page #song-image,
+html[data-glassy-quality] #player-page ytmusic-player #song-image,
 html[data-glassy-quality] #player-page ytmusic-player #song-image img,
-html[data-glassy-quality] #player-page #thumbnail img {
-  border-radius: 18px !important;
+html[data-glassy-quality] #player-page #thumbnail img,
+html[data-glassy-quality] #player-page yt-img-shadow.ytmusic-player img {
+  border-radius: var(--glassy-radius-lg) !important;
 }
 
 html[data-glassy-quality] #player-page #song-image,
-html[data-glassy-quality] #player-page yt-img-shadow.ytmusic-player {
-  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.48);
+html[data-glassy-quality] #player-page yt-img-shadow.ytmusic-player,
+html[data-glassy-quality] #player-page #song-video {
+  box-shadow: var(--glassy-artwork-shadow) !important;
+}
+
+html[data-glassy-quality] #player-page ytmusic-player {
+  overflow: visible !important;
+}
+
+/* Text shadow protection for readability over dynamic album backgrounds */
+html[data-glassy-quality]
+  :is(
+    ytmusic-player-bar .title,
+    ytmusic-player-bar #song-title,
+    ytmusic-player-queue-item .song-title,
+    ytmusic-playlist-panel-video-renderer .title,
+    ytmusic-responsive-list-item-renderer .title,
+    .title.ytmusic-detail-header-renderer,
+    .title.ytmusic-responsive-header-renderer,
+    ytmusic-header-renderer h2,
+    ytmusic-responsive-header-renderer h2
+  ) {
+  text-shadow: var(--glassy-text-shadow);
+}
+
+/* Subtle dark scrim on browse page so tracks remain crisp against light covers */
+html[data-glassy-quality] #browse-page {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.32) 100%
+  ) !important;
 }
 
 /* 2026-08 YTM: transport in ytmusic-player-bar. Restyle hit targets;
@@ -298,14 +488,10 @@ html[data-glassy-quality] ytmusic-player-bar .time-info {
 /* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel). */
 html[data-glassy-quality='low']
   :is(
-    #nav-bar-background,
     #player-bar-background,
-    ytmusic-search-box .search-box,
-    ytmusic-search-box[opened],
-    ytmusic-search-suggestions-section,
+    ytmusic-search-box[opened] #suggestions,
+    ytmusic-search-box[opened] #suggestion-list,
     #search-page #tabs.stuck,
-    #guide-wrapper,
-    #mini-guide-background,
     ytmusic-menu-popup-renderer,
     tp-yt-paper-listbox,
     tp-yt-paper-dialog
@@ -315,19 +501,20 @@ html[data-glassy-quality='low']
   -webkit-backdrop-filter: none !important;
 }
 
+html[data-glassy-quality='low'] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality='low'] ytmusic-search-box[opened] #suggestion-list {
+  background: var(--glassy-search-panel) !important;
+}
+
 @supports not (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
   html[data-glassy-quality='high']
     :is(
-      #nav-bar-background,
       #player-bar-background,
-      ytmusic-search-box .search-box,
-      ytmusic-search-box[opened],
-      ytmusic-search-suggestions-section,
+      ytmusic-search-box[opened] #suggestions,
+      ytmusic-search-box[opened] #suggestion-list,
       #search-page #tabs.stuck,
-      #guide-wrapper,
-      #mini-guide-background,
       ytmusic-menu-popup-renderer,
       tp-yt-paper-listbox,
       tp-yt-paper-dialog
@@ -335,5 +522,10 @@ html[data-glassy-quality='low']
     background: var(--glassy-tint-low) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestions,
+  html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestion-list {
+    background: var(--glassy-search-panel) !important;
   }
 }
