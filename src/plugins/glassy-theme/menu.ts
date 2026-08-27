@@ -36,5 +36,13 @@ export const onMenu = async ({
         },
       ],
     },
+    {
+      label: t('plugins.glassy-theme.menu.fullscreen-lyrics'),
+      type: 'checkbox' as const,
+      checked: config.fullscreenLyrics,
+      click(item: { checked: boolean }) {
+        setConfig({ fullscreenLyrics: item.checked });
+      },
+    },
   ];
 };

@@ -605,6 +605,7 @@
     "glassy-theme": {
       "description": "Frosted-glass chrome for navigation, search, menus, and the player bar. Do not enable together with Blur Navigation Bar (double blur).",
       "menu": {
+        "fullscreen-lyrics": "Show lyrics automatically in fullscreen",
         "quality": {
           "high": "High (blur)",
           "label": "Quality",

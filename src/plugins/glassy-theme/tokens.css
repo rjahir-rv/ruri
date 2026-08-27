@@ -8,6 +8,10 @@
   --glassy-radius-lg: 18px;
   --glassy-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --glassy-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  /* Album artwork square. Everything in the player chain sizes off this, so
+     the cover can never be stretched into a rectangle by a parent's box. */
+  --glassy-art: min(40vw, 54vh, 460px);
+  --glassy-art-fullscreen: min(38vw, 60vh, 500px);
   --glassy-artwork-shadow:
     0 24px 60px rgba(0, 0, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.45);
   --glassy-hover: rgba(255, 255, 255, 0.1);
@@ -21,8 +25,8 @@
   --glassy-text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
   --glassy-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --glassy-appear: cubic-bezier(0.22, 1, 0.36, 1);
-  --glassy-lyric-size: clamp(1.7rem, 2.3vw, 2.75rem);
+  --glassy-lyric-size: clamp(2.1rem, 3vw, 3.4rem);
   --glassy-lyric-blur-prev: 5px;
   --glassy-lyric-blur-next: 7px;
-  --glassy-lyric-rise: 0.75rem;
+  --glassy-lyric-rise: 0.85rem;
 }

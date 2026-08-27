@@ -43,6 +43,109 @@ html[data-glassy-quality]
   margin: 12px 18px 18px 0;
 }
 
+/* 2026-08 YTM: #side-panel in the fullscreen now-playing layout (phase 8).
+   Lyrics only, floating on the album wash: no glass card, no tab strip, no
+   queue / related / comments, no provider picker — nothing from the previous
+   screen's chrome. YTM hides and inerts this column in fullscreen, hence the
+   display / visibility overrides. Layout of the two columns lives in
+   overlay.css, on the wrapper div that actually holds them. */
+html[data-glassy-quality]:has(
+    ytmusic-player-page[player-ui-state='FULLSCREEN'],
+    ytmusic-app-layout[player-ui-state='FULLSCREEN'],
+    ytmusic-player[player-ui-state='FULLSCREEN']
+  ) {
+  /* Takes every pixel the cover leaves, so the lines centre in what is left. */
+  & #side-panel.ytmusic-player-page {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: min(88vh, 900px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 2 !important;
+    transform: none !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Tab strip (Up Next / Lyrics / Related) plus its chrome. The strip is a
+     #header inside #tab-renderer on current YTM; match the tabs element too so
+     it stays hidden if that moves again. */
+  & #side-panel.ytmusic-player-page
+    :is(#header, #tabsContent, .tab-header-container, tp-yt-paper-tabs, #tabs) {
+    display: none !important;
+  }
+
+  /* Only the lyrics tab renders; queue / related / comments stay out. */
+  & #side-panel.ytmusic-player-page
+    #tab-renderer:not([page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']) {
+    display: none !important;
+  }
+
+  & #side-panel.ytmusic-player-page #tab-renderer {
+    padding-inline: 0 !important;
+    background: transparent !important;
+  }
+
+  /* The synced-lyrics provider switcher (MusixMatch / LRCLib …) is chrome from
+     the previous screen: fullscreen shows lines only. */
+  & :is(.lyrics-picker, div:has(> .lyrics-picker)) {
+    display: none !important;
+  }
+
+  /* No lyrics for this track: collapse the column so the cover ends up centred.
+     Width, not display — the tab has to stay in the tree to keep loading. */
+  & ytmusic-player-page:not(
+      :has(
+          #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+          #synced-lyrics-container,
+          .lyric-container,
+          .lyrics-renderer
+        )
+    )
+    #side-panel.ytmusic-player-page {
+    width: 0 !important;
+    max-width: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Living-room scale for the lines. */
+  & ytmusic-player-page {
+    --glassy-lyric-size: clamp(2.4rem, 3.4vw, 4.4rem);
+    --glassy-lyric-rise: 1.1rem;
+  }
+
+  & #synced-lyrics-container .lyric-container {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 980px !important;
+    margin-inline: auto !important;
+    padding: 24px 32px 40px !important;
+    text-align: center !important;
+  }
+
+  & :is(.synced-line, .text-lyrics, .text-lyrics.description) {
+    text-align: center !important;
+  }
+
+  /* The active-line scale grows from the middle now that lines are centred. */
+  & .synced-line .text-lyrics {
+    transform-origin: 50% 50% !important;
+  }
+}
+
 html[data-glassy-quality='high'] #side-panel.ytmusic-player-page {
   backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate)) !important;
   -webkit-backdrop-filter: blur(var(--glassy-blur))
@@ -50,16 +153,38 @@ html[data-glassy-quality='high'] #side-panel.ytmusic-player-page {
 }
 
 /* Lyrics tab: drop the glass card so lines sit on the album wash
-   (Apple Music-style). Queue / Related keep the frosted column. */
+   (Apple Music-style) and hide tabs header so only lyrics display. */
 html[data-glassy-quality]
   #side-panel.ytmusic-player-page:has(
     #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
-  ) {
+  ),
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(#synced-lyrics-container),
+html[data-glassy-quality] #side-panel.ytmusic-player-page:has(.lyric-container),
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(.lyrics-renderer) {
   background: transparent !important;
   border: none;
   box-shadow: none;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(
+    #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']
+  )
+  #header,
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(#synced-lyrics-container)
+  #header,
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(.lyric-container)
+  #header,
+html[data-glassy-quality]
+  #side-panel.ytmusic-player-page:has(.lyrics-renderer)
+  #header {
+  display: none !important;
 }
 
 /* 2026-08 YTM: #tab-renderer — fills the side-panel. Keep it clear so

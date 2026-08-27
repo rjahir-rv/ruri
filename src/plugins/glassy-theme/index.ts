@@ -1,6 +1,7 @@
 import { t } from '@/i18n';
 import { createPlugin } from '@/utils';
 
+import { startFullscreenLyrics, stopFullscreenLyrics } from './fullscreen-lyrics';
 import lyrics from './lyrics.css?inline';
 import { onMenu } from './menu';
 import overlay from './overlay.css?inline';
@@ -11,6 +12,7 @@ import type { GlassyQuality, GlassyThemeConfig } from './types';
 const defaultConfig: GlassyThemeConfig = {
   enabled: true,
   quality: 'high',
+  fullscreenLyrics: true,
 };
 
 function applyQuality(quality: GlassyQuality) {
@@ -41,12 +43,16 @@ export default createPlugin({
     async start({ getConfig }) {
       const config = await getConfig();
       applyQuality(config.quality);
+      if (config.fullscreenLyrics) startFullscreenLyrics();
       await warnOnDoubleBlur();
     },
     onConfigChange(newConfig: GlassyThemeConfig) {
       applyQuality(newConfig.quality);
+      if (newConfig.fullscreenLyrics) startFullscreenLyrics();
+      else stopFullscreenLyrics();
     },
     stop() {
+      stopFullscreenLyrics();
       delete document.documentElement.dataset.glassyQuality;
     },
   },
