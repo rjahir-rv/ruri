@@ -42,24 +42,56 @@ const titleStyle = cacheNoArgs(
     align-items: center;
     gap: 4px;
 
-    color: #f1f1f1;
+    color: var(--glassy-text, #f4f6fb);
     font-size: 12px;
-    padding: 4px 4px 4px var(--offset-left, 4px);
-    background-color: var(--titlebar-background-color, #030303);
+    padding: 3px 4px 3px var(--offset-left, 4px);
+    background-color: var(
+      --titlebar-background-color,
+      rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.75)
+    );
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(var(--glassy-blur, 18px))
+      saturate(var(--glassy-saturate, 140%));
+    -webkit-backdrop-filter: blur(var(--glassy-blur, 18px))
+      saturate(var(--glassy-saturate, 140%));
     user-select: none;
 
     transition:
       opacity 200ms ease 0s,
-      transform 300ms cubic-bezier(0.2, 0, 0.6, 1) 0s,
-      background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) 0s;
+      transform 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) 0s,
+      background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) 0s;
 
     &[data-macos='true'] {
-      padding: 4px 4px 4px 74px;
+      padding: 3px 4px 3px 74px;
     }
 
     ytmusic-app:has(ytmusic-player[player-ui-state='FULLSCREEN'])
       ~ &:not([data-show='true']) {
       transform: translateY(calc(-1 * var(--menu-bar-height, 32px)));
+    }
+
+    html[data-glassy-quality='low'] & {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background-color: var(
+        --titlebar-background-color,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.92)
+      );
+    }
+
+    @supports not (
+      (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+    ) {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background-color: var(
+        --titlebar-background-color,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.92)
+      );
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
     }
   `,
 );
@@ -68,33 +100,45 @@ const separatorStyle = cacheNoArgs(
   () => css`
     min-height: 1px;
     height: 1px;
-    margin: 4px 0;
-
-    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    margin: 5px 6px;
+    background-color: rgba(255, 255, 255, 0.1);
   `,
 );
 
 const animationStyle = cacheNoArgs(() => ({
   enter: css`
     opacity: 0;
-    transform: translateX(-50%) scale(0.8);
+    transform: translateX(-10px) scale(0.95);
   `,
   enterActive: css`
     transition:
-      opacity 0.1s cubic-bezier(0.33, 1, 0.68, 1),
-      transform 0.1s cubic-bezier(0.33, 1, 0.68, 1);
+      opacity 140ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1)),
+      transform 140ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
   exitTo: css`
     opacity: 0;
-    transform: translateX(-50%) scale(0.8);
+    transform: translateX(-10px) scale(0.95);
   `,
   exitActive: css`
     transition:
-      opacity 0.1s cubic-bezier(0.32, 0, 0.67, 0),
-      transform 0.1s cubic-bezier(0.32, 0, 0.67, 0);
+      opacity 120ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      transform 120ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
   move: css`
-    transition: all 0.1s cubic-bezier(0.65, 0, 0.35, 1);
+    transition: all 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
   fakeTarget: css`
     position: absolute;
@@ -122,6 +166,7 @@ const PanelRenderer = (props: PanelRendererProps) => {
               <PanelItem
                 chip={subItem().sublabel}
                 commandId={subItem().commandId}
+                disabled={subItem().enabled === false}
                 name={subItem().label}
                 onClick={() => props.onClick?.(subItem().commandId)}
                 toolTip={subItem().toolTip}
@@ -132,6 +177,7 @@ const PanelRenderer = (props: PanelRendererProps) => {
               <PanelItem
                 chip={subItem().sublabel}
                 commandId={subItem().commandId}
+                disabled={subItem().enabled === false}
                 level={[...(props.level ?? []), subItem().commandId]}
                 name={subItem().label}
                 toolTip={subItem().toolTip}
@@ -149,6 +195,7 @@ const PanelRenderer = (props: PanelRendererProps) => {
                 checked={subItem().checked}
                 chip={subItem().sublabel}
                 commandId={subItem().commandId}
+                disabled={subItem().enabled === false}
                 name={subItem().label}
                 onChange={() => props.onClick?.(subItem().commandId)}
                 toolTip={subItem().toolTip}
@@ -160,6 +207,7 @@ const PanelRenderer = (props: PanelRendererProps) => {
                 checked={subItem().checked}
                 chip={subItem().sublabel}
                 commandId={subItem().commandId}
+                disabled={subItem().enabled === false}
                 name={subItem().label}
                 onChange={() =>
                   props.onClick?.(subItem().commandId, radioGroup())

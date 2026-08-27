@@ -81,6 +81,8 @@ function createAquaFilter(): SVGSVGElement {
   filter.setAttribute('height', '140%');
 
   const turbulence = svgEl('feTurbulence');
+  // The turbulence breathes slowly in normal mode; the reduced-motion rule
+  // below hides the SMIL animator while retaining a static displacement map.
   turbulence.setAttribute('type', 'fractalNoise');
   turbulence.setAttribute('baseFrequency', '0.008 0.014');
   turbulence.setAttribute('numOctaves', '3');
@@ -169,8 +171,12 @@ function isPlayerPageOpen(): boolean {
   const layout = document.querySelector('ytmusic-app-layout');
   if (
     layout?.hasAttribute('player-page-open') ||
-    layout?.getAttribute('player-ui-state') === 'PLAYER_PAGE_OPEN' ||
-    layout?.getAttribute('player-ui-state_') === 'PLAYER_PAGE_OPEN'
+    ['PLAYER_PAGE_OPEN', 'FULLSCREEN'].includes(
+      layout?.getAttribute('player-ui-state') ?? '',
+    ) ||
+    ['PLAYER_PAGE_OPEN', 'FULLSCREEN'].includes(
+      layout?.getAttribute('player-ui-state_') ?? '',
+    )
   ) {
     return true;
   }

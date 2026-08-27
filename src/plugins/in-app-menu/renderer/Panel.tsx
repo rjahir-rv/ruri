@@ -25,44 +25,95 @@ const panelStyle = cacheNoArgs(
     z-index: 10000;
     width: fit-content;
     height: fit-content;
+    min-width: 220px;
 
-    padding: 4px;
+    padding: 6px;
     box-sizing: border-box;
-    border-radius: 8px;
+    border-radius: var(--glassy-radius-lg, 16px);
     overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 
-    background-color: color-mix(
-      in srgb,
-      var(--titlebar-background-color, #030303) 50%,
-      rgba(0, 0, 0, 0.1)
-    );
-    backdrop-filter: blur(8px);
+    background:
+      linear-gradient(
+        var(--glassy-search-scrim, rgba(8, 8, 12, 0.42)),
+        var(--glassy-search-scrim, rgba(8, 8, 12, 0.42))
+      ),
+      var(
+        --glassy-search-panel,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.9)
+      );
+    border: var(--glassy-border, 1px solid rgba(255, 255, 255, 0.12));
     box-shadow:
-      0 0 0 1px rgba(0, 0, 0, 0.05),
-      0 2px 8px rgba(0, 0, 0, 0.2);
+      var(--glassy-shadow, 0 10px 28px rgba(0, 0, 0, 0.35)),
+      var(--glassy-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.14));
+    backdrop-filter: blur(var(--glassy-search-blur, 32px))
+      saturate(var(--glassy-saturate, 140%));
+    -webkit-backdrop-filter: blur(var(--glassy-search-blur, 32px))
+      saturate(var(--glassy-saturate, 140%));
 
     transform-origin: var(--origin-x, 50%) var(--origin-y, 50%);
+
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    html[data-glassy-quality='low'] & {
+      background: var(
+        --glassy-search-panel,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.95)
+      );
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    @supports not (
+      (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+    ) {
+      background: var(
+        --glassy-search-panel,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.95)
+      );
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   `,
 );
 
 const animationStyle = cacheNoArgs(() => ({
   enter: css`
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.96) translateY(-4px);
   `,
   enterActive: css`
     transition:
-      opacity 0.225s cubic-bezier(0.33, 1, 0.68, 1),
-      transform 0.225s cubic-bezier(0.33, 1, 0.68, 1);
+      opacity 180ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1)),
+      transform 180ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
   exitTo: css`
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.96) translateY(-4px);
   `,
   exitActive: css`
     transition:
-      opacity 0.225s cubic-bezier(0.32, 0, 0.67, 0),
-      transform 0.225s cubic-bezier(0.32, 0, 0.67, 0);
+      opacity 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      transform 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
 }));
 

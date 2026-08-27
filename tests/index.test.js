@@ -76,7 +76,14 @@ test('Ruri App - With default settings, app is launched and visible', async () =
           host: Boolean(host),
           layers:
             host?.querySelectorAll('.ruri-glassy-backdrop__layer').length ?? 0,
+          svgAnimations: host?.querySelectorAll('animate').length ?? 0,
           ytBg: style.getPropertyValue('--ytmusic-background').trim(),
+          albumColorIsWrapped: /^rgb\\(/i.test(
+            style.getPropertyValue('--ytmusic-album-color').trim(),
+          ),
+          darkAlbumColorIsWrapped: /^rgb\\(/i.test(
+            style.getPropertyValue('--ytmusic-album-color-dark').trim(),
+          ),
           glow: style.getPropertyValue('--glow-color').trim(),
           inactive: style.getPropertyValue('--lyrics-inactive-opacity').trim(),
           glassyQuality: html.dataset.glassyQuality ?? '',
@@ -94,7 +101,10 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     attr: 'on',
     host: true,
     layers: 2,
+    svgAnimations: 1,
     ytBg: 'transparent',
+    albumColorIsWrapped: false,
+    darkAlbumColorIsWrapped: false,
     glow: 'rgba(255, 255, 255, 0.5)',
     inactive: '0.58',
     glassyQuality: 'high',
@@ -103,6 +113,72 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     glassyAqua: 'on',
     lyricSize: 'clamp(1.7rem, 2.3vw, 2.75rem)',
   });
+
+  const defaultPlugins = await app.evaluate(async ({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    return win.webContents.executeJavaScript(`Promise.all([
+      'glassy-theme',
+      'glassy-backdrop',
+      'album-color-theme',
+      'synced-lyrics',
+      'do-not-track',
+    ].map((id) => window.mainConfig.plugins.isEnabled(id)))`);
+  });
+  expect(defaultPlugins).toEqual([true, true, true, true, true]);
+
+  await app.evaluate(async ({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    await win.webContents.executeJavaScript(
+      `window.mainConfig.plugins.setOptions('glassy-theme', { quality: 'low' })`,
+    );
+  });
+
+  await expect
+    .poll(
+      () =>
+        app.evaluate(async ({ BrowserWindow }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          if (!win) return null;
+          return win.webContents.executeJavaScript(`(() => {
+            const html = document.documentElement;
+            const layer = document.querySelector(
+              '#ruri-glassy-backdrop .ruri-glassy-backdrop__layer',
+            );
+            return {
+              quality: html.dataset.glassyQuality ?? '',
+              layerDisplay: layer ? getComputedStyle(layer).display : '',
+              layerFilter: layer ? getComputedStyle(layer).filter : '',
+            };
+          })()`);
+        }),
+      { timeout: 15_000 },
+    )
+    .toEqual({
+      quality: 'low',
+      layerDisplay: 'none',
+      layerFilter: 'none',
+    });
+
+  await app.evaluate(async ({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    await win.webContents.executeJavaScript(
+      `window.mainConfig.plugins.setOptions('glassy-theme', { quality: 'high' })`,
+    );
+  });
+
+  await expect
+    .poll(
+      () =>
+        app.evaluate(async ({ BrowserWindow }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          if (!win) return '';
+          return win.webContents.executeJavaScript(
+            `document.documentElement.dataset.glassyQuality ?? ''`,
+          );
+        }),
+      { timeout: 15_000 },
+    )
+    .toBe('high');
 
   await expect
     .poll(

@@ -13,34 +13,54 @@ import { Panel } from './Panel';
 const itemStyle = cacheNoArgs(
   () => css`
     position: relative;
-
     -webkit-app-region: none;
-    min-height: 32px;
-    height: 32px;
+    min-height: 34px;
+    height: auto;
+    padding: 6px 8px;
 
     display: grid;
-    grid-template-columns: 32px 1fr auto minmax(32px, auto);
-    justify-content: flex-start;
+    grid-template-columns: 24px 1fr auto auto;
     align-items: center;
+    gap: 8px;
 
-    border-radius: 4px;
+    border-radius: var(--glassy-radius, 8px);
     cursor: pointer;
     box-sizing: border-box;
     user-select: none;
     -webkit-user-drag: none;
+    outline: none;
 
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--glassy-text, #f4f6fb);
+    transition:
+      background-color 150ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      color 150ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      opacity 150ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
 
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+    &:hover:not([data-disabled='true']) {
+      background-color: var(--glassy-hover, rgba(255, 255, 255, 0.1));
     }
 
-    &:active {
-      background-color: rgba(255, 255, 255, 0.2);
+    &:active:not([data-disabled='true']) {
+      background-color: rgba(255, 255, 255, 0.16);
     }
 
     &[data-selected='true'] {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: var(--glassy-hover, rgba(255, 255, 255, 0.1));
+    }
+
+    &[data-disabled='true'] {
+      opacity: 0.42;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(244, 246, 251, 0.75);
+      outline-offset: -2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
     }
 
     & * {
@@ -51,54 +71,69 @@ const itemStyle = cacheNoArgs(
 
 const itemIconStyle = cacheNoArgs(
   () => css`
-    height: 32px;
-    padding: 4px;
-    color: white;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--glassy-text, #f4f6fb);
+    flex-shrink: 0;
   `,
 );
 
 const itemLabelStyle = cacheNoArgs(
   () => css`
-    font-size: 12px;
-    color: white;
+    font-size: 13px;
+    font-weight: 450;
+    color: var(--glassy-text, #f4f6fb);
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   `,
 );
 
 const itemChipStyle = cacheNoArgs(
   () => css`
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
 
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    margin-left: 8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    margin-left: 6px;
 
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #f1f1f1;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--glassy-text, #f4f6fb);
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     line-height: 1;
+    text-transform: uppercase;
   `,
 );
 
 const toolTipStyle = cacheNoArgs(
   () => css`
-    min-width: 32px;
-    width: 100%;
-    height: 100%;
+    min-width: 48px;
+    max-width: 260px;
+    padding: 6px 10px;
 
-    padding: 4px;
+    border-radius: var(--glassy-radius, 8px);
+    background: rgba(12, 12, 16, 0.92);
+    border: var(--glassy-border, 1px solid rgba(255, 255, 255, 0.12));
+    box-shadow: var(--glassy-shadow, 0 10px 28px rgba(0, 0, 0, 0.35));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 
-    max-width: calc(var(--max-width, 100%) - 8px);
-    max-height: calc(var(--max-height, 100%) - 8px);
-
-    border-radius: 4px;
-    background-color: rgba(25, 25, 25, 0.8);
-    color: #f1f1f1;
-    font-size: 10px;
+    color: var(--glassy-text, #f4f6fb);
+    font-size: 11px;
+    line-height: 1.4;
+    word-break: break-word;
+    pointer-events: none;
   `,
 );
 
@@ -119,21 +154,29 @@ const popupStyle = cacheNoArgs(
 const animationStyle = cacheNoArgs(() => ({
   enter: css`
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   `,
   enterActive: css`
     transition:
-      opacity 0.225s cubic-bezier(0.33, 1, 0.68, 1),
-      transform 0.225s cubic-bezier(0.33, 1, 0.68, 1);
+      opacity 180ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1)),
+      transform 180ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
   exitTo: css`
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   `,
   exitActive: css`
     transition:
-      opacity 0.225s cubic-bezier(0.32, 0, 0.67, 0),
-      transform 0.225s cubic-bezier(0.32, 0, 0.67, 0);
+      opacity 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      transform 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
 }));
 
@@ -155,6 +198,7 @@ type BasePanelItemProps = {
   chip?: string;
   toolTip?: string;
   commandId?: number;
+  disabled?: boolean;
 };
 type NormalPanelItemProps = BasePanelItemProps & {
   type: 'normal';
@@ -205,6 +249,7 @@ export const PanelItem = (props: PanelItemProps) => {
   });
 
   const handleHover = (event: MouseEvent) => {
+    if (props.disabled) return;
     setToolTipOpen(true);
     event.target?.addEventListener(
       'mouseleave',
@@ -278,6 +323,7 @@ export const PanelItem = (props: PanelItemProps) => {
   };
 
   const handleClick = async () => {
+    if (props.disabled) return;
     await window.ipcRenderer.invoke('peard:menu-event', props.commandId);
     if (props.type === 'radio') {
       props.onChange?.(!props.checked);
@@ -285,77 +331,150 @@ export const PanelItem = (props: PanelItemProps) => {
       props.onChange?.(!props.checked);
     } else if (props.type === 'normal') {
       props.onClick?.();
+    } else if (props.type === 'submenu') {
+      setOpen(!open());
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (props.disabled) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleClick();
     }
   };
 
   return (
     <li
+      aria-disabled={props.disabled}
       class={itemStyle()}
+      data-disabled={props.disabled}
       data-selected={open()}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onMouseEnter={handleHover}
       ref={setAnchor}
+      role="menuitem"
+      tabIndex={props.disabled ? -1 : 0}
     >
       <Switch fallback={<div class={itemIconStyle()} />}>
-        <Match when={props.type === 'checkbox' && props.checked}>
-          <svg
-            class={itemIconStyle()}
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.5"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+        <Match when={props.type === 'checkbox'}>
+          <Show
+            fallback={
+              <svg
+                class={itemIconStyle()}
+                fill="none"
+                height={18}
+                viewBox="0 0 24 24"
+                width={18}
+              >
+                <rect
+                  fill="rgba(255, 255, 255, 0.05)"
+                  height="18"
+                  rx="4"
+                  stroke="rgba(255, 255, 255, 0.25)"
+                  stroke-width="1.5"
+                  width="18"
+                  x="3"
+                  y="3"
+                />
+              </svg>
+            }
+            when={props.type === 'checkbox' && props.checked}
           >
-            <path d="M0 0h24v24H0z" fill="none" stroke="none" />
-            <path d="M5 12l5 5l10 -10" />
-          </svg>
+            <svg
+              class={itemIconStyle()}
+              fill="none"
+              height={18}
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              viewBox="0 0 24 24"
+              width={18}
+            >
+              <rect
+                fill="rgba(255, 255, 255, 0.16)"
+                height="18"
+                rx="4"
+                stroke="rgba(255, 255, 255, 0.4)"
+                stroke-width="1.5"
+                width="18"
+                x="3"
+                y="3"
+              />
+              <polyline
+                points="7 12.5 10.5 16 17 8.5"
+                stroke="var(--glassy-text, #f4f6fb)"
+                stroke-width="2.2"
+              />
+            </svg>
+          </Show>
         </Match>
-        <Match when={props.type === 'radio' && props.checked}>
-          <svg
-            class={itemIconStyle()}
-            style={{ padding: '6px' }}
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
+        <Match when={props.type === 'radio'}>
+          <Show
+            fallback={
+              <svg
+                class={itemIconStyle()}
+                fill="none"
+                height={18}
+                viewBox="0 0 24 24"
+                width={18}
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  fill="rgba(255, 255, 255, 0.05)"
+                  r="9"
+                  stroke="rgba(255, 255, 255, 0.25)"
+                  stroke-width="1.5"
+                />
+              </svg>
+            }
+            when={props.type === 'radio' && props.checked}
           >
-            <path
-              d="M10,5 C7.2,5 5,7.2 5,10 C5,12.8 7.2,15 10,15 C12.8,15 15,12.8 15,10 C15,7.2 12.8,5 10,5 L10,5 Z M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M10,18 C5.6,18 2,14.4 2,10 C2,5.6 5.6,2 10,2 C14.4,2 18,5.6 18,10 C18,14.4 14.4,18 10,18 L10,18 Z"
-              fill="currentColor"
-            />
-          </svg>
-        </Match>
-        <Match when={props.type === 'radio' && !props.checked}>
-          <svg
-            class={itemIconStyle()}
-            style={{ padding: '6px' }}
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10,0 C4.5,0 0,4.5 0,10 C0,15.5 4.5,20 10,20 C15.5,20 20,15.5 20,10 C20,4.5 15.5,0 10,0 L10,0 Z M10,18 C5.6,18 2,14.4 2,10 C2,5.6 5.6,2 10,2 C14.4,2 18,5.6 18,10 C18,14.4 14.4,18 10,18 L10,18 Z"
-              fill="currentColor"
-            />
-          </svg>
+            <svg
+              class={itemIconStyle()}
+              fill="none"
+              height={18}
+              viewBox="0 0 24 24"
+              width={18}
+            >
+              <circle
+                cx="12"
+                cy="12"
+                fill="rgba(255, 255, 255, 0.16)"
+                r="9"
+                stroke="rgba(255, 255, 255, 0.4)"
+                stroke-width="1.5"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                fill="var(--glassy-text, #f4f6fb)"
+                r="4.5"
+              />
+            </svg>
+          </Show>
         </Match>
       </Switch>
       <span class={itemLabelStyle()}>{props.name}</span>
       <Show fallback={<div />} when={props.chip}>
         <span class={itemChipStyle()}>{props.chip}</span>
       </Show>
-      <Show when={props.type === 'submenu'}>
+      <Show fallback={<div />} when={props.type === 'submenu'}>
         <svg
           class={itemIconStyle()}
           fill="none"
+          height={16}
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
-          stroke-width="1.5"
+          stroke-width="2"
+          style={{ color: 'var(--glassy-text-muted, #c5cad4)' }}
           viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+          width={16}
         >
-          <path d="M0 0h24v24H0z" fill="none" stroke="none" />
-          <polyline points="9 6 15 12 9 18" />
+          <polyline points="9 18 15 12 9 6" />
         </svg>
         <Panel
           anchor={anchor()}

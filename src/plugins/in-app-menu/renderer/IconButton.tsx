@@ -6,32 +6,45 @@ import { cacheNoArgs } from '@/providers/decorators';
 const iconButton = cacheNoArgs(
   () => css`
     -webkit-app-region: none;
-
     background: transparent;
 
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 
-    padding: 2px;
-    border-radius: 2px;
+    padding: 4px;
+    border-radius: var(--glassy-radius, 6px);
 
     display: flex;
     justify-content: center;
     align-items: center;
 
-    color: white;
-
+    color: var(--glassy-text-muted, #c5cad4);
     outline: none;
     border: none;
+    cursor: pointer;
 
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition:
+      background-color 150ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
+      color 150ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background-color: var(--glassy-hover, rgba(255, 255, 255, 0.1));
+      color: var(--glassy-text, #f4f6fb);
     }
 
     &:active {
-      scale: 0.9;
+      background-color: rgba(255, 255, 255, 0.16);
+      transform: scale(0.95);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(244, 246, 251, 0.75);
+      outline-offset: -2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+      transform: none !important;
     }
   `,
 );

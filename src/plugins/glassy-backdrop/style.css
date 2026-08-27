@@ -64,8 +64,12 @@ html[data-glassy-backdrop][data-glassy-aqua]:has(
     ytmusic-app-layout[player-page-open],
     ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
     ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state='FULLSCREEN'],
+    ytmusic-app-layout[player-ui-state_='FULLSCREEN'],
     ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
-    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='FULLSCREEN'],
+    ytmusic-player-page[player-ui-state_='FULLSCREEN']
   ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
   .ruri-glassy-backdrop__layer.is-front {
   filter: url('#ruri-aqua-filter') blur(26px) saturate(1.7);
@@ -76,8 +80,12 @@ html[data-glassy-backdrop][data-glassy-aqua]:has(
     ytmusic-app-layout[player-page-open],
     ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
     ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state='FULLSCREEN'],
+    ytmusic-app-layout[player-ui-state_='FULLSCREEN'],
     ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
-    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='FULLSCREEN'],
+    ytmusic-player-page[player-ui-state_='FULLSCREEN']
   ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
   .ruri-glassy-backdrop__veil {
   background:
@@ -93,8 +101,12 @@ html[data-glassy-backdrop][data-glassy-aqua]:has(
     ytmusic-app-layout[player-page-open],
     ytmusic-app-layout[player-ui-state='PLAYER_PAGE_OPEN'],
     ytmusic-app-layout[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-app-layout[player-ui-state='FULLSCREEN'],
+    ytmusic-app-layout[player-ui-state_='FULLSCREEN'],
     ytmusic-player-page[player-ui-state='PLAYER_PAGE_OPEN'],
-    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN']
+    ytmusic-player-page[player-ui-state_='PLAYER_PAGE_OPEN'],
+    ytmusic-player-page[player-ui-state='FULLSCREEN'],
+    ytmusic-player-page[player-ui-state_='FULLSCREEN']
   ):not([data-glassy-quality='low']):not([data-glassy-backdrop-quality='low'])
   .ruri-glassy-backdrop__aqua {
   display: block;
@@ -180,8 +192,10 @@ html[data-glassy-backdrop] .ruri-glassy-backdrop__wave--3 {
     animation: none !important;
   }
 
+  /* SVG/SMIL is independent of CSS animation timing. Hiding the animator
+     leaves the artwork warped, but prevents it from continuing to move. */
   html[data-glassy-backdrop] .ruri-glassy-backdrop__filter animate {
-    display: none;
+    display: none !important;
   }
 }
 

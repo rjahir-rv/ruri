@@ -10,12 +10,18 @@ const containerStyle = cacheNoArgs(
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 2px;
+    padding-right: 4px;
 
     & > *:last-of-type {
-      border-top-right-radius: 4px;
+      border-top-right-radius: var(--glassy-radius, 6px);
 
       &:hover {
-        background: rgba(255, 0, 0, 0.5);
+        background: rgba(235, 60, 60, 0.8) !important;
+        color: #ffffff !important;
+      }
+      &:active {
+        background: rgba(210, 40, 40, 0.95) !important;
       }
     }
   `,
