@@ -74,6 +74,10 @@ function observeDocumentTitle() {
 
 observeDocumentTitle();
 
+window.ipcRenderer.on('peard:viewport-restore', () => {
+  window.dispatchEvent(new Event('resize'));
+});
+
 async function listenForApiLoad() {
   if (!isApiLoaded) {
     api = document.querySelector('#movie_player');

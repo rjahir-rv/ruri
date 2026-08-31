@@ -233,5 +233,16 @@ export const menu = async (
         });
       },
     },
+    {
+      label: t('plugins.synced-lyrics.menu.debug.label'),
+      toolTip: t('plugins.synced-lyrics.menu.debug.tooltip'),
+      type: 'checkbox',
+      checked: Boolean(config.debug),
+      click(item) {
+        ctx.setConfig({
+          debug: item.checked,
+        });
+      },
+    },
   ];
 };

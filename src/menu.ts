@@ -597,27 +597,22 @@ export const mainMenuTemplate = async (
               },
             },
             { type: 'separator' },
-            is.macOS()
-              ? {
-                  label: t(
-                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                  ),
-                  // Cannot use "toggleDevTools" role in macOS
-                  click() {
-                    const { webContents } = win;
-                    if (webContents.isDevToolsOpened()) {
-                      webContents.closeDevTools();
-                    } else {
-                      webContents.openDevTools();
-                    }
-                  },
+            {
+              label: t(
+                'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
+              ),
+              // Detached: docked DevTools shrink the YTM viewport and can hide
+              // the nav / player bar after close. The "toggleDevTools" role
+              // also fails on macOS.
+              click() {
+                const { webContents } = win;
+                if (webContents.isDevToolsOpened()) {
+                  webContents.closeDevTools();
+                } else {
+                  webContents.openDevTools({ mode: 'detach' });
                 }
-              : {
-                  label: t(
-                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                  ),
-                  role: 'toggleDevTools',
-                },
+              },
+            },
             {
               label: t(
                 'main.menu.options.submenu.advanced-options.submenu.edit-config-json',

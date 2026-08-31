@@ -22,23 +22,31 @@ export const selectors = {
   },
 };
 
+let mountTask: Promise<void> | null = null;
+
 export const tabStates: Record<string, () => void> = {
-  true: async () => {
+  true: () => {
     setIsVisible(true);
 
-    let container = document.querySelector('#synced-lyrics-container');
-    if (container) return;
+    if (document.querySelector('#synced-lyrics-container')) return;
+    if (mountTask) return;
 
-    const tabRenderer = await waitForElement<HTMLElement>(
-      selectors.body.tabRenderer,
-    );
+    mountTask = (async () => {
+      const tabRenderer = await waitForElement<HTMLElement>(
+        selectors.body.tabRenderer,
+      );
 
-    container = Object.assign(document.createElement('div'), {
-      id: 'synced-lyrics-container',
+      if (document.querySelector('#synced-lyrics-container')) return;
+
+      const container = Object.assign(document.createElement('div'), {
+        id: 'synced-lyrics-container',
+      });
+
+      tabRenderer.appendChild(container);
+      render(() => <LyricsRenderer />, container);
+    })().finally(() => {
+      mountTask = null;
     });
-
-    tabRenderer.appendChild(container);
-    render(() => <LyricsRenderer />, container);
   },
   false: () => {
     setIsVisible(false);

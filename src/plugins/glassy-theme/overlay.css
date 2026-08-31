@@ -383,138 +383,136 @@ html[data-glassy-quality]
   outline-offset: 2px;
 }
 
-/* 2026-08 YTM: Complete reset and centering of album art on song page & fullscreen */
-html[data-glassy-quality] #player-page #main-panel,
-html[data-glassy-quality] ytmusic-player-page #main-panel {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  align-items: center !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  background: transparent !important;
-}
-
-/* 2026-08 YTM: the artwork square.
-   #player IS <ytmusic-player id="player" class="style-scope ytmusic-player-page">,
-   so both selectors below hit the same node — they were fighting each other,
-   `width: auto` winning on specificity and letting the cover stretch to the
-   panel's box. One rule now, sized only from --glassy-art, with the min/max
-   floor kept so flex layout can never shrink or stretch it. */
-html[data-glassy-quality] #player-page #player.ytmusic-player-page,
-html[data-glassy-quality] ytmusic-player-page #player.ytmusic-player-page,
-html[data-glassy-quality] #av-id ~ #player.ytmusic-player-page,
-html[data-glassy-quality] ytmusic-player.ytmusic-player-page {
-  position: relative !important;
-  inset: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-  flex: 0 0 auto !important;
-  width: var(--glassy-art) !important;
-  height: var(--glassy-art) !important;
-  min-width: var(--glassy-art) !important;
-  min-height: var(--glassy-art) !important;
-  max-width: var(--glassy-art) !important;
-  max-height: var(--glassy-art) !important;
-  aspect-ratio: 1 / 1 !important;
-  margin: auto !important;
-  padding: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  border-radius: var(--glassy-radius-lg) !important;
-  box-shadow: none !important;
+/* Home reuses this same #player as a bottom-right thumbnail. Leave YTM's
+   MINIPLAYER size/position alone and do not clip it. */
+html[data-glassy-quality]
+  ytmusic-player-page:is(
+    [player-ui-state='MINIPLAYER'],
+    [player-ui-state_='MINIPLAYER']
+  ) {
   overflow: visible !important;
 }
 
-/* YTM paints its own hover scrim / shadow inside #player, and those overlays
-   are square: their corners poke out past the rounded cover. Hand the radius
-   down to everything in the square instead of chasing each overlay by name. */
-html[data-glassy-quality] #player.ytmusic-player-page *,
-html[data-glassy-quality] #player.ytmusic-player-page *::before,
-html[data-glassy-quality] #player.ytmusic-player-page *::after {
-  border-radius: inherit !important;
-}
-
-/* The cover chain fills that square. No `display` here: YTM and video-toggle
-   flip #song-image / #song-video with an inline display, and !important on
-   display would show the cover on top of a playing video. */
-html[data-glassy-quality] #player-page #song-image,
-html[data-glassy-quality] ytmusic-player-page #song-image,
-html[data-glassy-quality] #song-image.ytmusic-player {
-  position: relative !important;
-  inset: auto !important;
-  box-sizing: border-box !important;
-  flex: 0 0 auto !important;
-  align-self: center !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
-  margin: auto !important;
-  padding: 0 !important;
-  border-radius: var(--glassy-radius-lg) !important;
-  box-shadow: var(--glassy-artwork-shadow) !important;
-  overflow: hidden !important;
-  background: transparent !important;
-}
-
+/* Song-page / fullscreen cover square. Do not apply in MINIPLAYER: YTM
+   reuses #player as the bottom-right home thumbnail and owns its size and
+   position. `position: relative` + `--glassy-art` pulled that thumbnail
+   into the closed player-page. Polymer also reflects player-ui-state_. */
 html[data-glassy-quality]
-  #player-page
-  #song-image
-  :is(yt-img-shadow, #thumbnail),
-html[data-glassy-quality]
-  ytmusic-player-page
-  #song-image
-  :is(yt-img-shadow, #thumbnail),
-html[data-glassy-quality]
-  #song-image.ytmusic-player
-  :is(yt-img-shadow, #thumbnail) {
-  position: relative !important;
-  inset: auto !important;
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
-  border-radius: var(--glassy-radius-lg) !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN'],
+    [player-ui-state='FULLSCREEN'],
+    [player-ui-state_='FULLSCREEN']
+  ) {
+  & #main-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    background: transparent !important;
+  }
 
-html[data-glassy-quality] #player-page #song-image :is(img, #img),
-html[data-glassy-quality] ytmusic-player-page #song-image :is(img, #img),
-html[data-glassy-quality] #song-image.ytmusic-player :is(img, #img) {
-  position: relative !important;
-  inset: auto !important;
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
-  object-fit: cover !important;
-  border-radius: var(--glassy-radius-lg) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+  /* #player IS <ytmusic-player id="player" class="style-scope ytmusic-player-page">.
+     Size only from --glassy-art so flex layout cannot shrink or stretch it. */
+  & #player.ytmusic-player-page,
+  & #av-id ~ #player.ytmusic-player-page {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    width: var(--glassy-art) !important;
+    height: var(--glassy-art) !important;
+    min-width: var(--glassy-art) !important;
+    min-height: var(--glassy-art) !important;
+    max-width: var(--glassy-art) !important;
+    max-height: var(--glassy-art) !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
 
-html[data-glassy-quality] #player-page #song-video,
-html[data-glassy-quality] ytmusic-player-page #song-video {
-  box-shadow: var(--glassy-artwork-shadow) !important;
-  border-radius: var(--glassy-radius-lg) !important;
-  overflow: hidden !important;
+  /* YTM paints its own hover scrim / shadow inside #player, and those overlays
+     are square: their corners poke out past the rounded cover. */
+  & #player.ytmusic-player-page *,
+  & #player.ytmusic-player-page *::before,
+  & #player.ytmusic-player-page *::after {
+    border-radius: inherit !important;
+  }
+
+  /* No `display` here: YTM and video-toggle flip #song-image / #song-video
+     with an inline display, and !important on display would show the cover
+     on top of a playing video. */
+  & #song-image {
+    position: relative !important;
+    inset: auto !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: auto !important;
+    padding: 0 !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    box-shadow: var(--glassy-artwork-shadow) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  & #song-image :is(yt-img-shadow, #thumbnail) {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  & #song-image :is(img, #img) {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  & #song-video {
+    box-shadow: var(--glassy-artwork-shadow) !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    overflow: hidden !important;
+  }
 }
 
 /* 2026-08 YTM: fullscreen now-playing layout (phase 8) — cover left, lyrics
@@ -540,9 +538,9 @@ html[data-glassy-quality]:has(
   & ytmusic-player-page {
     display: flex !important;
     box-sizing: border-box !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     padding: 0 !important;
     overflow: hidden !important;
     background: transparent !important;
@@ -556,7 +554,7 @@ html[data-glassy-quality]:has(
     box-sizing: border-box !important;
     width: 100% !important;
     height: 100% !important;
-    max-height: 100vh !important;
+    max-height: 100dvh !important;
     padding: 40px 56px !important;
     gap: 48px !important;
     overflow: hidden !important;

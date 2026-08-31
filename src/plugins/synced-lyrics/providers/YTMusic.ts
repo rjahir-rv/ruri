@@ -25,7 +25,9 @@ export class YTMusic implements LyricProvider {
     const { tabs } =
       data?.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer
         ?.watchNextTabbedResultsRenderer ?? {};
-    if (!Array.isArray(tabs)) return null;
+    if (!Array.isArray(tabs)) {
+      throw new Error('ytmusic watch-next tabs are not ready yet');
+    }
 
     const lyricsTab = tabs.find((it) => {
       const pageType = it?.tabRenderer?.endpoint?.browseEndpoint
@@ -37,10 +39,14 @@ export class YTMusic implements LyricProvider {
     if (!lyricsTab) return null;
 
     const { browseId } = lyricsTab?.tabRenderer?.endpoint?.browseEndpoint ?? {};
-    if (!browseId) return null;
+    if (!browseId) {
+      throw new Error('ytmusic lyrics browseId is missing');
+    }
 
     const { contents } = await this.fetchBrowse(browseId);
-    if (!contents) return null;
+    if (!contents) {
+      throw new Error('ytmusic lyrics browse payload is empty');
+    }
 
     /*
       NOTE: Due to the nature of the library, the json responses are not consistent,
@@ -73,6 +79,13 @@ export class YTMusic implements LyricProvider {
       : undefined;
 
     if (typeof plain === 'string' && plain === 'Lyrics not available') {
+      return null;
+    }
+
+    if (
+      !synced?.length &&
+      !(typeof plain === 'string' && plain.trim().length > 0)
+    ) {
       return null;
     }
 

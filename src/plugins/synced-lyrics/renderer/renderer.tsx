@@ -210,19 +210,21 @@ export const LyricsRenderer = () => {
         return [{ kind: 'Error', error: error! }];
       }
 
-      if (data?.lines) {
+      if (data?.lines && data.lines.length > 0) {
         return data.lines.map((line) => ({
           kind: 'SyncedLine' as const,
           line,
         }));
       }
 
-      if (data?.lyrics) {
+      if (typeof data?.lyrics === 'string' && data.lyrics.trim()) {
         const lines = data.lyrics.split('\n').filter((line) => line.trim());
-        return lines.map((line) => ({
-          kind: 'PlainLine' as const,
-          line,
-        }));
+        if (lines.length > 0) {
+          return lines.map((line) => ({
+            kind: 'PlainLine' as const,
+            line,
+          }));
+        }
       }
 
       return [{ kind: 'NotFoundKaomoji' }];
@@ -264,7 +266,7 @@ export const LyricsRenderer = () => {
     const idx = currentIndex();
     const maxIdx = untrack(statuses).length - 1;
 
-    if (!scroller() || !current.data?.lines) return;
+    if (!scroller() || !current.data?.lines?.length) return;
 
     // hacky way to make the "current" line scroll to the center of the screen
     const scrollIndex = Math.min(idx + 1, maxIdx);

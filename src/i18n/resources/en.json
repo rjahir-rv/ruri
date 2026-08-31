@@ -914,6 +914,10 @@
           "label": "Show lyrics even if inexact",
           "tooltip": "If the song is not found, the plugin tries again with a different search query.\nThe result from the second attempt may not be exact."
         },
+        "debug": {
+          "label": "Log lyrics fetch details",
+          "tooltip": "Write lyrics fetch and provider-selection events to the developer console"
+        },
         "show-time-codes": {
           "label": "Show time codes",
           "tooltip": "Show the time codes next to the lyrics"

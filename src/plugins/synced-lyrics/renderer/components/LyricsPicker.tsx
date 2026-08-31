@@ -22,19 +22,24 @@ import {
 } from 'solid-js';
 import * as z from 'zod';
 
+import { getSongInfo } from '@/providers/song-info-front';
 import { LitElementWrapper } from '@/solit';
 
 import {
   type ProviderName,
-  ProviderNames,
   providerNames,
   ProviderNameSchema,
-  type ProviderState,
 } from '../../providers';
 import { _ytAPI } from '../index';
+import { hasUsableLyrics } from '../lyrics-select';
 import { reactiveOwner } from '../reactive-root';
-import { config } from '../renderer';
-import { currentLyrics, lyricsStore, setLyricsStore } from '../store';
+import {
+  currentLyrics,
+  lyricsStore,
+  setHasManuallySwitchedProvider,
+  setLyricsStore,
+  setPinnedProvider,
+} from '../store';
 
 import type { PlayerAPIEvents } from '@/types/player-api-events';
 
@@ -45,42 +50,6 @@ const LocalStorageSchema = z.object({
 export const providerIdx = runWithOwner(reactiveOwner, () =>
   createMemo(() => providerNames.indexOf(lyricsStore.provider)),
 )!;
-
-const shouldSwitchProvider = (providerData: ProviderState) => {
-  if (providerData.state === 'error') return true;
-  if (providerData.state === 'fetching') return true;
-  return (
-    providerData.state === 'done' &&
-    !providerData.data?.lines &&
-    !providerData.data?.lyrics
-  );
-};
-
-const providerBias = (p: ProviderName) =>
-  (lyricsStore.lyrics[p].state === 'done' ? 1 : -1) +
-  (lyricsStore.lyrics[p].data?.lines?.length ? 2 : -1) +
-  (lyricsStore.lyrics[p].data?.lines?.length && p === ProviderNames.YTMusic
-    ? 1
-    : 0) +
-  (lyricsStore.lyrics[p].data?.lyrics ? 1 : -1);
-
-const pickBestProvider = () => {
-  const preferred = config()?.preferredProvider;
-  if (preferred) {
-    const data = lyricsStore.lyrics[preferred].data;
-    if (Array.isArray(data?.lines) || data?.lyrics) {
-      return { provider: preferred, force: true };
-    }
-  }
-
-  const providers = Array.from(providerNames);
-  providers.sort((a, b) => providerBias(b) - providerBias(a));
-
-  return { provider: providers[0], force: false };
-};
-
-const [hasManuallySwitchedProvider, setHasManuallySwitchedProvider] =
-  createSignal(false);
 
 export const LyricsPicker = (props: {
   setStickRef: Setter<HTMLElement | null>;
@@ -143,30 +112,21 @@ export const LyricsPicker = (props: {
 
   // prettier-ignore
   {
-    onMount(() => _ytAPI?.addEventListener('videodatachange', videoDataChangeHandler));
+    onMount(() => {
+      const currentId = getSongInfo().videoId;
+      if (currentId) setVideoId(currentId);
+      _ytAPI?.addEventListener('videodatachange', videoDataChangeHandler);
+    });
     onCleanup(() => _ytAPI?.removeEventListener('videodatachange', videoDataChangeHandler));
   }
 
   createEffect(() => {
-    if (!hasManuallySwitchedProvider()) {
-      const starred = starredProvider();
-      if (starred !== null) {
-        setLyricsStore('provider', starred);
-        return;
-      }
-
-      const allProvidersFailed = providerNames.every((p) =>
-        shouldSwitchProvider(lyricsStore.lyrics[p]),
-      );
-      if (allProvidersFailed) return;
-
-      const { provider, force } = pickBestProvider();
-      if (
-        force ||
-        providerBias(lyricsStore.provider) < providerBias(provider)
-      ) {
-        setLyricsStore('provider', provider);
-      }
+    const starred = starredProvider();
+    const id = videoId();
+    if (id === null) return;
+    setPinnedProvider(starred, id);
+    if (starred !== null) {
+      setLyricsStore('provider', starred);
     }
   });
 
@@ -237,8 +197,7 @@ export const LyricsPicker = (props: {
                   <Match
                     when={
                       currentLyrics().state === 'done' &&
-                      (currentLyrics().data?.lines ||
-                        currentLyrics().data?.lyrics)
+                      hasUsableLyrics(currentLyrics().data)
                     }
                   >
                     <LitElementWrapper
@@ -249,8 +208,7 @@ export const LyricsPicker = (props: {
                   <Match
                     when={
                       currentLyrics().state === 'done' &&
-                      !currentLyrics().data?.lines &&
-                      !currentLyrics().data?.lyrics
+                      !hasUsableLyrics(currentLyrics().data)
                     }
                   >
                     <LitElementWrapper
@@ -283,7 +241,10 @@ export const LyricsPicker = (props: {
             {(_, idx) => (
               <li
                 class="lyrics-picker-dot"
-                onClick={() => setLyricsStore('provider', providerNames[idx()])}
+                onClick={() => {
+                  setHasManuallySwitchedProvider(true);
+                  setLyricsStore('provider', providerNames[idx()]);
+                }}
                 style={{
                   background: idx() === providerIdx() ? 'white' : 'black',
                 }}

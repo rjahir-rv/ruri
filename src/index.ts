@@ -170,9 +170,11 @@ if (config.get('options.proxy')) {
   app.commandLine.appendSwitch('proxy-server', proxyToUse);
 }
 
-// Adds debug features like hotkeys for triggering dev tools and reload
+// Adds debug features like hotkeys for triggering dev tools and reload.
+// Detach so docked tools cannot shrink the YTM viewport below desktop chrome.
 electronDebug({
-  showDevTools: false, // Disable automatic devTools on new window
+  showDevTools: false,
+  devToolsMode: 'detach',
 });
 
 let icon = 'assets/icon.png';
@@ -325,9 +327,31 @@ function initTheme(win: BrowserWindow) {
   win.webContents.once('did-finish-load', () => {
     if (is.dev() && !isTesting()) {
       console.debug(LoggerPrefix, t('main.console.did-finish-load.dev-tools'));
-      win.webContents.openDevTools();
+      win.webContents.openDevTools({ mode: 'detach' });
     }
   });
+}
+
+function restoreRendererViewport(win: BrowserWindow) {
+  const run = () => {
+    if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+
+    // Chromium often keeps the DevTools-shrunk 100vh / matchMedia after the
+    // dock closes. A 1px content-size nudge forces a real layout pass. Skip
+    // when maximized or fullscreen so we do not drop those states.
+    if (!win.isMaximized() && !win.isFullScreen()) {
+      const [width, height] = win.getContentSize();
+      if (width > 0 && height > 0) {
+        win.setContentSize(width, height + 1);
+        win.setContentSize(width, height);
+      }
+    }
+
+    win.webContents.send('peard:viewport-restore');
+  };
+
+  setTimeout(run, 0);
+  setTimeout(run, 80);
 }
 
 function resolveWindowTitle(): string {
@@ -519,6 +543,12 @@ async function createMainWindow() {
         ),
       });
     }
+  });
+  win.webContents.on('devtools-closed', () => {
+    restoreRendererViewport(win);
+  });
+  win.webContents.on('devtools-opened', () => {
+    restoreRendererViewport(win);
   });
   win.webContents.on('will-redirect', (event) => {
     const url = URL.parse(event.url);

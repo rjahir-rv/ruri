@@ -6,7 +6,7 @@
 /* original style */
 ytmusic-app-layout {
   overflow: auto scroll;
-  height: calc(100vh - var(--menu-bar-height, 36px));
+  height: calc(100dvh - var(--menu-bar-height, 36px));
 
   /* fixes laggy list scrolling in large playlists */
   backface-visibility: hidden;
@@ -55,14 +55,14 @@ ytmusic-app[is-bauhaus-sidenav-enabled] #mini-guide-spacer.ytmusic-app {
 ytmusic-app-layout > [slot='player-page'] {
   margin-top: var(--menu-bar-height);
   height: calc(
-    100vh - var(--menu-bar-height) - var(--ytmusic-nav-bar-height) -
+    100dvh - var(--menu-bar-height) - var(--ytmusic-nav-bar-height) -
       var(--ytmusic-player-bar-height)
   ) !important;
 }
 
 ytmusic-guide-renderer {
   height: calc(
-    100vh - var(--menu-bar-height) - var(--ytmusic-nav-bar-height)
+    100dvh - var(--menu-bar-height) - var(--ytmusic-nav-bar-height)
   ) !important;
 }
 
