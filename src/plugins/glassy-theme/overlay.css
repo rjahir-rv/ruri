@@ -580,6 +580,7 @@ html[data-glassy-quality]:has(
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
+    transform: translateY(var(--glassy-art-fullscreen-shift)) !important;
   }
 
   /* Music videos are 16:9: contain them in the square so nothing is cut. */

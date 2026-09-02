@@ -12,6 +12,8 @@
      the cover can never be stretched into a rectangle by a parent's box. */
   --glassy-art: min(40vw, 54vh, 460px);
   --glassy-art-fullscreen: min(38vw, 60vh, 500px);
+  /* Optical lift so the cover sits in the stage above the player bar. */
+  --glassy-art-fullscreen-shift: -56px;
   --glassy-artwork-shadow:
     0 24px 60px rgba(0, 0, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.45);
   --glassy-hover: rgba(255, 255, 255, 0.1);
@@ -26,7 +28,7 @@
   --glassy-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --glassy-appear: cubic-bezier(0.22, 1, 0.36, 1);
   --glassy-lyric-size: clamp(2.1rem, 3vw, 3.4rem);
-  --glassy-lyric-blur-prev: 5px;
-  --glassy-lyric-blur-next: 7px;
+  --glassy-lyric-blur-prev: 1.5px;
+  --glassy-lyric-blur-next: 2.5px;
   --glassy-lyric-rise: 0.85rem;
 }

@@ -4,7 +4,7 @@
 /* Synced-lyrics writes --lyrics-*-opacity inline on :root from lineEffect.
    !important: that inline assignment otherwise wins and neighbors stay at 0.33. */
 html[data-glassy-quality] {
-  --lyrics-inactive-opacity: 0.58 !important;
+  --lyrics-inactive-opacity: 0.7 !important;
   --lyrics-active-opacity: 1 !important;
   --lyrics-font-size: var(--glassy-lyric-size) !important;
   --lyrics-line-height: 1.22 !important;

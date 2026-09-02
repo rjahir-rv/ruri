@@ -106,7 +106,7 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     albumColorIsWrapped: false,
     darkAlbumColorIsWrapped: false,
     glow: 'rgba(255, 255, 255, 0.5)',
-    inactive: '0.58',
+    inactive: '0.7',
     glassyQuality: 'high',
     albumColorPaint: 'off',
     glassyText: '#f4f6fb',
