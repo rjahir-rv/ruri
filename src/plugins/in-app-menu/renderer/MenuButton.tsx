@@ -12,8 +12,9 @@ const menuStyle = cacheNoArgs(
     align-items: center;
     align-self: stretch;
 
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: var(--glassy-radius, 6px);
+    gap: 6px;
 
     cursor: pointer;
     color: var(--glassy-text-muted, #c5cad4);
@@ -59,9 +60,10 @@ const menuStyle = cacheNoArgs(
 export type MenuButtonProps = JSX.HTMLAttributes<HTMLLIElement> & {
   text?: string;
   selected?: boolean;
+  icon?: JSX.Element;
 };
 export const MenuButton = (props: MenuButtonProps) => {
-  const [local, leftProps] = splitProps(props, ['text', 'onClick']);
+  const [local, leftProps] = splitProps(props, ['text', 'onClick', 'icon']);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -73,13 +75,18 @@ export const MenuButton = (props: MenuButtonProps) => {
   return (
     <li
       {...leftProps}
+      aria-expanded={props.selected}
       class={menuStyle()}
       data-selected={props.selected}
-      onClick={local.onClick}
+      onClick={(event) => {
+        const handler = local.onClick;
+        if (typeof handler === 'function') handler(event);
+      }}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
     >
+      {local.icon}
       {local.text}
     </li>
   );

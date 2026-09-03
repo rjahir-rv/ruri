@@ -18,6 +18,15 @@ import { APPLICATION_NAME, setLanguage, t } from '@/i18n';
 import * as config from './config';
 import { getWindowMinSize } from './config/defaults';
 import { getAllMenuTemplate, loadAllMenuPlugins } from './loader/menu';
+import {
+  ABOUT_MENU_ID,
+  getPluginGalleryEntry,
+  NAVIGATION_MENU_ID,
+  OPTIONS_MENU_ID,
+  PLUGIN_SECTION_IDS,
+  PLUGINS_MENU_ID,
+  VIEW_MENU_ID,
+} from './plugins/in-app-menu/gallery/catalog';
 import { restart } from './providers/app-controls';
 import { startingPages } from './providers/extracted-data';
 import promptOptions from './providers/prompt-options';
@@ -36,7 +45,9 @@ const pluginEnabledMenu = async (
   isNew = false,
   hasSubmenu = false,
   refreshMenu?: () => void,
+  itemId = plugin,
 ): Promise<Electron.MenuItemConstructorOptions> => ({
+  id: itemId,
   label: label || plugin,
   sublabel: isNew ? t('main.menu.plugins.new') : undefined,
   toolTip: description,
@@ -97,6 +108,7 @@ export const mainMenuTemplate = async (
       return [
         id,
         {
+          id,
           label: pluginLabel,
           sublabel: isNew ? t('main.menu.plugins.new') : undefined,
           toolTip: pluginDescription,
@@ -108,6 +120,7 @@ export const mainMenuTemplate = async (
               false,
               true,
               innerRefreshMenu,
+              `${id}::enabled`,
             ),
             { type: 'separator' },
             ...template,
@@ -118,45 +131,68 @@ export const mainMenuTemplate = async (
   );
 
   const availablePlugins = Object.keys(await allPlugins());
-  const pluginMenus = await Promise.all(
-    availablePlugins
-      .sort((a, b) => {
-        const aPluginLabel = allPluginsStubs[a]?.name?.() ?? a;
-        const bPluginLabel = allPluginsStubs[b]?.name?.() ?? b;
+  const pluginItemEntries = await Promise.all(
+    availablePlugins.map(async (id) => {
+      const predefinedTemplate = menuResult.find((it) => it[0] === id);
+      if (predefinedTemplate) return [id, predefinedTemplate[1]] as const;
 
-        return aPluginLabel.localeCompare(bPluginLabel);
-      })
-      .map(async (id) => {
-        const predefinedTemplate = menuResult.find((it) => it[0] === id);
-        if (predefinedTemplate) return predefinedTemplate[1];
+      const plugin = allPluginsStubs[id];
+      const pluginLabel = plugin?.name?.() ?? id;
+      const pluginDescription = plugin?.description?.() ?? undefined;
+      const isNew = plugin?.addedVersion
+        ? satisfies(packageJson.version, plugin.addedVersion)
+        : false;
 
-        const plugin = allPluginsStubs[id];
-        const pluginLabel = plugin?.name?.() ?? id;
-        const pluginDescription = plugin?.description?.() ?? undefined;
-        const isNew = plugin?.addedVersion
-          ? satisfies(packageJson.version, plugin.addedVersion)
-          : false;
-
-        return pluginEnabledMenu(
+      return [
+        id,
+        await pluginEnabledMenu(
           id,
           pluginLabel,
           pluginDescription,
           isNew,
           true,
           innerRefreshMenu,
-        );
-      }),
+        ),
+      ] as const;
+    }),
   );
+  const pluginItemById = new Map(pluginItemEntries);
+
+  const pluginMenus: Electron.MenuItemConstructorOptions[] = [];
+  for (const section of PLUGIN_SECTION_IDS) {
+    const sectionIds = availablePlugins
+      .filter((id) => getPluginGalleryEntry(id).section === section)
+      .sort((a, b) => {
+        const aPluginLabel = allPluginsStubs[a]?.name?.() ?? a;
+        const bPluginLabel = allPluginsStubs[b]?.name?.() ?? b;
+        return aPluginLabel.localeCompare(bPluginLabel);
+      });
+    if (sectionIds.length === 0) continue;
+    if (pluginMenus.length > 0) {
+      pluginMenus.push({ type: 'separator' });
+    }
+    pluginMenus.push({
+      id: `plugins-section-${section}`,
+      label: t(`main.menu.plugins.sections.${section}`),
+      enabled: false,
+    });
+    for (const id of sectionIds) {
+      const item = pluginItemById.get(id);
+      if (item) pluginMenus.push(item);
+    }
+  }
 
   const langResources = await languageResources();
   const availableLanguages = Object.keys(langResources);
 
   return [
     {
+      id: PLUGINS_MENU_ID,
       label: t('main.menu.plugins.label'),
       submenu: pluginMenus,
     },
     {
+      id: OPTIONS_MENU_ID,
       label: t('main.menu.options.label'),
       submenu: [
         {
@@ -626,6 +662,7 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: VIEW_MENU_ID,
       label: t('main.menu.view.label'),
       submenu: [
         {
@@ -671,6 +708,7 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: NAVIGATION_MENU_ID,
       label: t('main.menu.navigation.label'),
       submenu: [
         {
@@ -707,6 +745,7 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: ABOUT_MENU_ID,
       label: t('main.menu.about'),
       submenu: [{ role: 'about' }],
     },

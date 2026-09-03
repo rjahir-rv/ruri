@@ -186,9 +186,22 @@
         }
       },
       "plugins": {
+        "close": "Close",
+        "empty": "No plugins match",
         "enabled": "Enabled",
         "label": "Plugins",
-        "new": "NEW"
+        "locked": "Required for the menu bar",
+        "new": "NEW",
+        "restart-needed": "Restart required",
+        "search": "Search plugins",
+        "sections": {
+          "all": "All",
+          "appearance": "Look",
+          "apps": "Apps",
+          "lyrics": "Lyrics",
+          "playback": "Playback",
+          "system": "System"
+        }
       },
       "view": {
         "label": "View",

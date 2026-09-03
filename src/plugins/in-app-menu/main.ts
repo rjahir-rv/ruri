@@ -23,6 +23,9 @@ export const onMainLoad = ({
     register(win, '`', () => {
       send('toggle-in-app-menu');
     });
+    register(win, 'CmdOrCtrl+Shift+P', () => {
+      send('open-plugin-gallery');
+    });
   });
 
   handle('get-menu', () =>

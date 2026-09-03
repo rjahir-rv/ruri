@@ -1,25 +1,30 @@
 import { type Menu, type MenuItem } from 'electron';
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
+  ErrorBoundary,
   Index,
-  Match,
   onCleanup,
   onMount,
   Show,
-  Switch,
 } from 'solid-js';
 import { css } from 'solid-styled-components';
-import { TransitionGroup } from 'solid-transition-group';
 
+import { t } from '@/i18n';
 import { cacheNoArgs } from '@/providers/decorators';
 
 import { IconButton } from './IconButton';
 import { MenuButton } from './MenuButton';
 import { Panel } from './Panel';
-import { PanelItem } from './PanelItem';
+import { PanelRenderer } from './PanelRenderer';
+import { PluginGallery } from './PluginGallery';
 import { WindowController } from './WindowController';
+
+import { MENU_BAR_ICONS, PLUGINS_MENU_ID } from '../gallery/catalog';
+import { PhIcon, type PhIconName } from '../gallery/icons';
+import { submenuItemsOf } from '../gallery/parse';
 
 import type { InAppMenuConfig } from '../constants';
 import type { RendererContext } from '@/types/contexts';
@@ -31,7 +36,7 @@ const titleStyle = cacheNoArgs(
 
     position: fixed;
     top: 0;
-    z-index: 10000000;
+    z-index: 10000010;
 
     width: 100%;
     height: var(--menu-bar-height, 32px);
@@ -96,135 +101,16 @@ const titleStyle = cacheNoArgs(
   `,
 );
 
-const separatorStyle = cacheNoArgs(
+const menuRowStyle = cacheNoArgs(
   () => css`
-    min-height: 1px;
-    height: 1px;
-    border: none;
-    margin: 5px 6px;
-    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    align-self: stretch;
+    gap: 4px;
+    min-width: 0;
   `,
 );
-
-const animationStyle = cacheNoArgs(() => ({
-  enter: css`
-    opacity: 0;
-    transform: translateX(-10px) scale(0.95);
-  `,
-  enterActive: css`
-    transition:
-      opacity 140ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1)),
-      transform 140ms var(--glassy-appear, cubic-bezier(0.22, 1, 0.36, 1));
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none !important;
-    }
-  `,
-  exitTo: css`
-    opacity: 0;
-    transform: translateX(-10px) scale(0.95);
-  `,
-  exitActive: css`
-    transition:
-      opacity 120ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1)),
-      transform 120ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none !important;
-    }
-  `,
-  move: css`
-    transition: all 140ms var(--glassy-ease, cubic-bezier(0.2, 0.8, 0.2, 1));
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none !important;
-    }
-  `,
-  fakeTarget: css`
-    position: absolute;
-    opacity: 0;
-  `,
-  fake: css`
-    transition: all 0.00000000001s;
-  `,
-}));
-
-export type PanelRendererProps = {
-  items: Electron.Menu['items'];
-  level?: number[];
-  onClick?: (commandId: number, radioGroup?: MenuItem[]) => void;
-};
-const PanelRenderer = (props: PanelRendererProps) => {
-  const radioGroup = () => props.items.filter((it) => it.type === 'radio');
-
-  return (
-    <Index each={props.items}>
-      {(subItem) => (
-        <Show when={subItem().visible}>
-          <Switch>
-            <Match when={subItem().type === 'normal'}>
-              <PanelItem
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                disabled={subItem().enabled === false}
-                name={subItem().label}
-                onClick={() => props.onClick?.(subItem().commandId)}
-                toolTip={subItem().toolTip}
-                type={'normal'}
-              />
-            </Match>
-            <Match when={subItem().type === 'submenu'}>
-              <PanelItem
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                disabled={subItem().enabled === false}
-                level={[...(props.level ?? []), subItem().commandId]}
-                name={subItem().label}
-                toolTip={subItem().toolTip}
-                type={'submenu'}
-              >
-                <PanelRenderer
-                  items={subItem().submenu?.items ?? []}
-                  level={[...(props.level ?? []), subItem().commandId]}
-                  onClick={props.onClick}
-                />
-              </PanelItem>
-            </Match>
-            <Match when={subItem().type === 'checkbox'}>
-              <PanelItem
-                checked={subItem().checked}
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                disabled={subItem().enabled === false}
-                name={subItem().label}
-                onChange={() => props.onClick?.(subItem().commandId)}
-                toolTip={subItem().toolTip}
-                type={'checkbox'}
-              />
-            </Match>
-            <Match when={subItem().type === 'radio'}>
-              <PanelItem
-                checked={subItem().checked}
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                disabled={subItem().enabled === false}
-                name={subItem().label}
-                onChange={() =>
-                  props.onClick?.(subItem().commandId, radioGroup())
-                }
-                toolTip={subItem().toolTip}
-                type={'radio'}
-              />
-            </Match>
-            <Match when={subItem().type === 'separator'}>
-              <hr class={separatorStyle()} />
-            </Match>
-          </Switch>
-        </Show>
-      )}
-    </Index>
-  );
-};
 
 export type TitleBarProps = {
   ipc: RendererContext<InAppMenuConfig>['ipc'];
@@ -234,10 +120,29 @@ export type TitleBarProps = {
 };
 export const TitleBar = (props: TitleBarProps) => {
   const [collapsed, setCollapsed] = createSignal(props.initialCollapsed);
-  const [ignoreTransition, setIgnoreTransition] = createSignal(false);
-  const [openTarget, setOpenTarget] = createSignal<HTMLElement | null>(null);
+  const [openMenuId, setOpenMenuId] = createSignal<string | null>(null);
+  const [anchors, setAnchors] = createSignal(new Map<string, HTMLElement>());
   const [menu, setMenu] = createSignal<Menu | null>(null);
   const [mouseY, setMouseY] = createSignal(0);
+
+  const isPluginsMenuItem = (item: MenuItem) =>
+    item.id === PLUGINS_MENU_ID || item.label === t('main.menu.plugins.label');
+
+  const idForMenuItem = (item: MenuItem, index: number) =>
+    isPluginsMenuItem(item) ? PLUGINS_MENU_ID : item.id || `menu-${index}`;
+
+  const openMenuItem = createMemo(() => {
+    const id = openMenuId();
+    if (!id) return undefined;
+    return menu()?.items.find(
+      (item, index) => idForMenuItem(item, index) === id,
+    );
+  });
+
+  const openAnchor = createMemo(() => {
+    const id = openMenuId();
+    return id ? (anchors().get(id) ?? null) : null;
+  });
 
   const [data, { refetch }] = createResource(
     async () => (await props.ipc.invoke('get-menu')) as Promise<Menu | null>,
@@ -272,16 +177,15 @@ export const TitleBar = (props: TitleBarProps) => {
     const stack = [...(newMenu?.items ?? [])];
     let now: MenuItem | undefined = stack.pop();
     while (now) {
-      const index =
-        now?.submenu?.items?.findIndex((it) => it.commandId === commandId) ??
-        -1;
+      const children = submenuItemsOf(now);
+      const index = children.findIndex((it) => it.commandId === commandId);
 
       if (index >= 0) {
-        if (menuItem) now?.submenu?.items?.splice(index, 1, menuItem);
-        else now?.submenu?.items?.splice(index, 1);
+        if (menuItem) children.splice(index, 1, menuItem);
+        else children.splice(index, 1);
       }
-      if (now?.submenu) {
-        stack.push(...now.submenu.items);
+      if (children.length > 0) {
+        stack.push(...children);
       }
 
       now = stack.pop();
@@ -316,20 +220,22 @@ export const TitleBar = (props: TitleBarProps) => {
 
   onMount(() => {
     props.ipc.on('close-all-in-app-menu-panel', async () => {
-      setIgnoreTransition(true);
       setMenu(null);
       await refetch();
       setMenu(data() ?? null);
-      setIgnoreTransition(false);
     });
     props.ipc.on('refresh-in-app-menu', async () => {
-      setIgnoreTransition(true);
       await refetch();
       setMenu(data() ?? null);
-      setIgnoreTransition(false);
     });
     props.ipc.on('toggle-in-app-menu', () => {
-      setCollapsed(!collapsed());
+      setCollapsed((current) => !current);
+    });
+    props.ipc.on('open-plugin-gallery', () => {
+      setCollapsed(false);
+      setOpenMenuId((current) =>
+        current === PLUGINS_MENU_ID ? null : PLUGINS_MENU_ID,
+      );
     });
 
     props.ipc.on('window-maximize', refetchMaximize);
@@ -341,10 +247,11 @@ export const TitleBar = (props: TitleBarProps) => {
         e.target instanceof HTMLElement &&
         !(
           e.target.closest('nav[data-ytmd-main-panel]') ||
-          e.target.closest('ul[data-ytmd-sub-panel]')
+          e.target.closest('ul[data-ytmd-sub-panel]') ||
+          e.target.closest('[data-ytmd-plugin-gallery]')
         )
       ) {
-        setOpenTarget(null);
+        setOpenMenuId(null);
       }
     });
 
@@ -380,7 +287,10 @@ export const TitleBar = (props: TitleBarProps) => {
       id={'ytmd-title-bar-main-panel'}
     >
       <IconButton
-        onClick={() => setCollapsed(!collapsed())}
+        onClick={() => {
+          setCollapsed((current) => !current);
+          setOpenMenuId(null);
+        }}
         style={{
           'border-top-left-radius': '4px',
         }}
@@ -392,92 +302,85 @@ export const TitleBar = (props: TitleBarProps) => {
           />
         </svg>
       </IconButton>
-      <TransitionGroup
-        enterActiveClass={
-          ignoreTransition()
-            ? animationStyle().fake
-            : animationStyle().enterActive
-        }
-        enterClass={
-          ignoreTransition()
-            ? animationStyle().fakeTarget
-            : animationStyle().enter
-        }
-        exitActiveClass={
-          ignoreTransition()
-            ? animationStyle().fake
-            : animationStyle().exitActive
-        }
-        exitToClass={
-          ignoreTransition()
-            ? animationStyle().fakeTarget
-            : animationStyle().exitTo
-        }
-        onAfterEnter={(element) => {
-          (element as HTMLElement).style.removeProperty('transition-delay');
-        }}
-        onBeforeEnter={(element) => {
-          if (ignoreTransition()) return;
-          const index = Number(element.getAttribute('data-index') ?? 0);
-
-          (element as HTMLElement).style.setProperty(
-            'transition-delay',
-            `${index * 0.025}s`,
-          );
-        }}
-        onBeforeExit={(element) => {
-          if (ignoreTransition()) return;
-          const index = Number(element.getAttribute('data-index') ?? 0);
-          const length = Number(element.getAttribute('data-length') ?? 1);
-
-          (element as HTMLElement).style.setProperty(
-            'transition-delay',
-            `${(length - index) * 0.025}s`,
-          );
-        }}
-      >
-        <Show when={!collapsed()}>
+      <Show when={!collapsed()}>
+        <div class={menuRowStyle()}>
           <Index each={menu()?.items}>
             {(item, index) => {
-              const [anchor, setAnchor] = createSignal<HTMLElement | null>(
-                null,
-              );
+              const isPlugins = () =>
+                item().id === PLUGINS_MENU_ID ||
+                item().label === t('main.menu.plugins.label');
+              const menuId = () =>
+                isPlugins() ? PLUGINS_MENU_ID : item().id || `menu-${index}`;
+              const menuIcon = () =>
+                MENU_BAR_ICONS[menuId()] as PhIconName | undefined;
 
               const handleClick = () => {
-                if (openTarget() === anchor()) {
-                  setOpenTarget(null);
-                } else {
-                  setOpenTarget(anchor());
-                }
+                setOpenMenuId((current) =>
+                  current === menuId() ? null : menuId(),
+                );
               };
 
               return (
-                <>
-                  <MenuButton
-                    data-index={index}
-                    data-length={data()?.items.length}
-                    onClick={handleClick}
-                    ref={setAnchor}
-                    selected={openTarget() === anchor()}
-                    text={item().label}
-                  />
-                  <Panel
-                    anchor={anchor()}
-                    offset={{ mainAxis: 8 }}
-                    open={openTarget() === anchor()}
-                    placement={'bottom-start'}
-                  >
-                    <PanelRenderer
-                      items={item().submenu?.items ?? []}
-                      onClick={handleItemClick}
-                    />
-                  </Panel>
-                </>
+                <MenuButton
+                  aria-haspopup={isPlugins() ? 'dialog' : 'menu'}
+                  icon={
+                    <Show when={menuIcon()}>
+                      {(name) => <PhIcon name={name()} size={14} />}
+                    </Show>
+                  }
+                  onClick={handleClick}
+                  ref={(el) => {
+                    setAnchors((prev) => {
+                      if (prev.get(menuId()) === el) return prev;
+                      const next = new Map(prev);
+                      if (el) next.set(menuId(), el);
+                      else next.delete(menuId());
+                      return next;
+                    });
+                  }}
+                  selected={openMenuId() === menuId()}
+                  text={item().label}
+                />
               );
             }}
           </Index>
-        </Show>
-      </TransitionGroup>
+        </div>
+      </Show>
+      <Show when={openMenuItem()}>
+        {(item) => (
+          <Show
+            fallback={
+              <Panel
+                anchor={openAnchor()}
+                offset={{ mainAxis: 8 }}
+                open={true}
+                placement={'bottom-start'}
+              >
+                <PanelRenderer
+                  items={submenuItemsOf(item())}
+                  onClick={handleItemClick}
+                />
+              </Panel>
+            }
+            when={isPluginsMenuItem(item())}
+          >
+            <ErrorBoundary
+              fallback={(error) => {
+                console.error('plugin-gallery', error);
+                queueMicrotask(() => setOpenMenuId(null));
+                return null;
+              }}
+            >
+              <PluginGallery
+                items={submenuItemsOf(item())}
+                onClose={() => setOpenMenuId(null)}
+                onItemClick={handleItemClick}
+                open={true}
+              />
+            </ErrorBoundary>
+          </Show>
+        )}
+      </Show>
       <Show when={props.enableController}>
         <div style={{ flex: 1 }} />
         <WindowController
