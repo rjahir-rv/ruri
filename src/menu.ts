@@ -73,8 +73,42 @@ export const refreshMenu = async (win: BrowserWindow) => {
   }
 };
 
-export const mainMenuTemplate = async (
+export const showAboutDialog = async (win?: BrowserWindow) => {
+  const options: Electron.MessageBoxOptions = {
+    type: 'info',
+    title: t('main.about.title'),
+    message: `${APPLICATION_NAME} v${packageJson.version}`,
+    detail: `${t('main.about.description')}\n\n${t('main.about.disclaimer')}\n${t('main.about.license')}`,
+    buttons: [t('main.about.close'), t('main.about.github')],
+    defaultId: 0,
+    cancelId: 0,
+  };
+  const result =
+    win && !win.isDestroyed()
+      ? await dialog.showMessageBox(win, options)
+      : await dialog.showMessageBox(options);
+  if (result.response === 1) {
+    await shell.openExternal('https://github.com/rjahir-rv/ruri');
+  }
+};
+
+const createAboutMenuItem = (
   win: BrowserWindow,
+): Electron.MenuItemConstructorOptions => ({
+  label: t('main.menu.about-app', { appName: APPLICATION_NAME }),
+  async click(_item, focusedWin) {
+    const targetWin = (focusedWin ?? win) as BrowserWindow | undefined;
+    const inAppMenuActive = await config.plugins.isEnabled('in-app-menu');
+    if (inAppMenuActive && targetWin && !targetWin.isDestroyed()) {
+      targetWin.webContents.send('open-about-modal');
+    } else {
+      await showAboutDialog(targetWin);
+    }
+  },
+});
+
+export const mainMenuTemplate = async (
+  win: Electron.BrowserWindow,
 ): Promise<MenuTemplate> => {
   const innerRefreshMenu = () => refreshMenu(win);
   const { navigationHistory } = win.webContents;
@@ -747,7 +781,7 @@ export const mainMenuTemplate = async (
     {
       id: ABOUT_MENU_ID,
       label: t('main.menu.about'),
-      submenu: [{ role: 'about' }],
+      submenu: [createAboutMenuItem(win)],
     },
   ];
 };
@@ -758,7 +792,7 @@ export const setApplicationMenu = async (win: Electron.BrowserWindow) => {
     menuTemplate.unshift({
       label: name,
       submenu: [
-        { role: 'about' },
+        createAboutMenuItem(win),
         { type: 'separator' },
         { role: 'hide' },
         { role: 'hideOthers' },

@@ -149,6 +149,16 @@ if (disableHardwareAcceleration) {
 // Apply disabled features
 app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
 
+app.setAboutPanelOptions({
+  applicationName: 'Ruri',
+  applicationVersion: app.getVersion(),
+  copyright: '© 2026 rjahir-rv. MIT License.',
+  website: 'https://github.com/rjahir-rv/ruri',
+  credits:
+    'A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.',
+  authors: ['rjahir-rv', 'Pear contributors'],
+});
+
 if (config.get('options.proxy')) {
   const authProxyEnabled = await config.plugins.isEnabled('auth-proxy-adapter');
 

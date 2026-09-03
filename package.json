@@ -4,7 +4,7 @@
   "desktopName": "dev.ruri.desktop",
   "productName": "Ruri",
   "version": "0.1.0",
-  "description": "Ruri is a client for music player",
+  "description": "A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.",
   "main": "./dist/main/index.js",
   "type": "module",
   "license": "MIT",

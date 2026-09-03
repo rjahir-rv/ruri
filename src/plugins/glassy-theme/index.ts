@@ -1,7 +1,10 @@
 import { t } from '@/i18n';
 import { createPlugin } from '@/utils';
 
-import { startFullscreenLyrics, stopFullscreenLyrics } from './fullscreen-lyrics';
+import {
+  startFullscreenLyrics,
+  stopFullscreenLyrics,
+} from './fullscreen-lyrics';
 import lyrics from './lyrics.css?inline';
 import { onMenu } from './menu';
 import overlay from './overlay.css?inline';

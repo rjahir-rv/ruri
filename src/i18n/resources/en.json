@@ -78,8 +78,18 @@
         "title": "Update Available"
       }
     },
+    "about": {
+      "close": "Close",
+      "description": "A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.",
+      "disclaimer": "Not affiliated with Google or YouTube.",
+      "github": "GitHub",
+      "license": "MIT License",
+      "title": "About Ruri",
+      "version": "v{{version}}"
+    },
     "menu": {
       "about": "About",
+      "about-app": "About {{appName}}",
       "navigation": {
         "label": "Navigation",
         "submenu": {

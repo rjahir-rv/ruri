@@ -78,8 +78,18 @@
         "title": "Actualización disponible"
       }
     },
+    "about": {
+      "close": "Cerrar",
+      "description": "Un cliente de escritorio para YouTube Music, diseñado con superficies translúcidas y una experiencia de escucha enfocada.",
+      "disclaimer": "No está afiliado con Google ni YouTube.",
+      "github": "GitHub",
+      "license": "Licencia MIT",
+      "title": "Acerca de Ruri",
+      "version": "v{{version}}"
+    },
     "menu": {
       "about": "Acerca de",
+      "about-app": "Acerca de {{appName}}",
       "navigation": {
         "label": "Navegación",
         "submenu": {

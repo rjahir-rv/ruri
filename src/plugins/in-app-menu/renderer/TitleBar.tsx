@@ -6,15 +6,18 @@ import {
   createSignal,
   ErrorBoundary,
   Index,
+  Match,
   onCleanup,
   onMount,
   Show,
+  Switch,
 } from 'solid-js';
 import { css } from 'solid-styled-components';
 
 import { t } from '@/i18n';
 import { cacheNoArgs } from '@/providers/decorators';
 
+import { AboutModal } from './AboutModal';
 import { IconButton } from './IconButton';
 import { MenuButton } from './MenuButton';
 import { Panel } from './Panel';
@@ -22,7 +25,11 @@ import { PanelRenderer } from './PanelRenderer';
 import { PluginGallery } from './PluginGallery';
 import { WindowController } from './WindowController';
 
-import { MENU_BAR_ICONS, PLUGINS_MENU_ID } from '../gallery/catalog';
+import {
+  ABOUT_MENU_ID,
+  MENU_BAR_ICONS,
+  PLUGINS_MENU_ID,
+} from '../gallery/catalog';
 import { PhIcon, type PhIconName } from '../gallery/icons';
 import { submenuItemsOf } from '../gallery/parse';
 
@@ -128,8 +135,14 @@ export const TitleBar = (props: TitleBarProps) => {
   const isPluginsMenuItem = (item: MenuItem) =>
     item.id === PLUGINS_MENU_ID || item.label === t('main.menu.plugins.label');
 
-  const idForMenuItem = (item: MenuItem, index: number) =>
-    isPluginsMenuItem(item) ? PLUGINS_MENU_ID : item.id || `menu-${index}`;
+  const isAboutMenuItem = (item: MenuItem) =>
+    item.id === ABOUT_MENU_ID || item.label === t('main.menu.about');
+
+  const idForMenuItem = (item: MenuItem, index: number) => {
+    if (isPluginsMenuItem(item)) return PLUGINS_MENU_ID;
+    if (isAboutMenuItem(item)) return ABOUT_MENU_ID;
+    return item.id || `menu-${index}`;
+  };
 
   const openMenuItem = createMemo(() => {
     const id = openMenuId();
@@ -237,6 +250,12 @@ export const TitleBar = (props: TitleBarProps) => {
         current === PLUGINS_MENU_ID ? null : PLUGINS_MENU_ID,
       );
     });
+    props.ipc.on('open-about-modal', () => {
+      setCollapsed(false);
+      setOpenMenuId((current) =>
+        current === ABOUT_MENU_ID ? null : ABOUT_MENU_ID,
+      );
+    });
 
     props.ipc.on('window-maximize', refetchMaximize);
     props.ipc.on('window-unmaximize', refetchMaximize);
@@ -306,11 +325,9 @@ export const TitleBar = (props: TitleBarProps) => {
         <div class={menuRowStyle()}>
           <Index each={menu()?.items}>
             {(item, index) => {
-              const isPlugins = () =>
-                item().id === PLUGINS_MENU_ID ||
-                item().label === t('main.menu.plugins.label');
-              const menuId = () =>
-                isPlugins() ? PLUGINS_MENU_ID : item().id || `menu-${index}`;
+              const isPlugins = () => isPluginsMenuItem(item());
+              const isAbout = () => isAboutMenuItem(item());
+              const menuId = () => idForMenuItem(item(), index);
               const menuIcon = () =>
                 MENU_BAR_ICONS[menuId()] as PhIconName | undefined;
 
@@ -322,7 +339,7 @@ export const TitleBar = (props: TitleBarProps) => {
 
               return (
                 <MenuButton
-                  aria-haspopup={isPlugins() ? 'dialog' : 'menu'}
+                  aria-haspopup={isPlugins() || isAbout() ? 'dialog' : 'menu'}
                   icon={
                     <Show when={menuIcon()}>
                       {(name) => <PhIcon name={name()} size={14} />}
@@ -348,7 +365,7 @@ export const TitleBar = (props: TitleBarProps) => {
       </Show>
       <Show when={openMenuItem()}>
         {(item) => (
-          <Show
+          <Switch
             fallback={
               <Panel
                 anchor={openAnchor()}
@@ -362,23 +379,35 @@ export const TitleBar = (props: TitleBarProps) => {
                 />
               </Panel>
             }
-            when={isPluginsMenuItem(item())}
           >
-            <ErrorBoundary
-              fallback={(error) => {
-                console.error('plugin-gallery', error);
-                queueMicrotask(() => setOpenMenuId(null));
-                return null;
-              }}
-            >
-              <PluginGallery
-                items={submenuItemsOf(item())}
-                onClose={() => setOpenMenuId(null)}
-                onItemClick={handleItemClick}
-                open={true}
-              />
-            </ErrorBoundary>
-          </Show>
+            <Match when={isPluginsMenuItem(item())}>
+              <ErrorBoundary
+                fallback={(error) => {
+                  console.error('plugin-gallery', error);
+                  queueMicrotask(() => setOpenMenuId(null));
+                  return null;
+                }}
+              >
+                <PluginGallery
+                  items={submenuItemsOf(item())}
+                  onClose={() => setOpenMenuId(null)}
+                  onItemClick={handleItemClick}
+                  open={true}
+                />
+              </ErrorBoundary>
+            </Match>
+            <Match when={isAboutMenuItem(item())}>
+              <ErrorBoundary
+                fallback={(error) => {
+                  console.error('about-modal', error);
+                  queueMicrotask(() => setOpenMenuId(null));
+                  return null;
+                }}
+              >
+                <AboutModal onClose={() => setOpenMenuId(null)} open={true} />
+              </ErrorBoundary>
+            </Match>
+          </Switch>
         )}
       </Show>
       <Show when={props.enableController}>

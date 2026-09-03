@@ -81,13 +81,15 @@ html[data-glassy-quality]:has(
   /* Tab strip (Up Next / Lyrics / Related) plus its chrome. The strip is a
      #header inside #tab-renderer on current YTM; match the tabs element too so
      it stays hidden if that moves again. */
-  & #side-panel.ytmusic-player-page
+  &
+    #side-panel.ytmusic-player-page
     :is(#header, #tabsContent, .tab-header-container, tp-yt-paper-tabs, #tabs) {
     display: none !important;
   }
 
   /* Only the lyrics tab renders; queue / related / comments stay out. */
-  & #side-panel.ytmusic-player-page
+  &
+    #side-panel.ytmusic-player-page
     #tab-renderer:not([page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS']) {
     display: none !important;
   }
@@ -105,13 +107,14 @@ html[data-glassy-quality]:has(
 
   /* No lyrics for this track: collapse the column so the cover ends up centred.
      Width, not display — the tab has to stay in the tree to keep loading. */
-  & ytmusic-player-page:not(
+  &
+    ytmusic-player-page:not(
       :has(
-          #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
-          #synced-lyrics-container,
-          .lyric-container,
-          .lyrics-renderer
-        )
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
     )
     #side-panel.ytmusic-player-page {
     width: 0 !important;
