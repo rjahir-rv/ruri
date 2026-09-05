@@ -37,10 +37,14 @@ html[data-glassy-quality] #side-panel.ytmusic-player-page {
 html[data-glassy-quality]
   ytmusic-player-page:not([player-ui-state='FULLSCREEN'])
   #side-panel.ytmusic-player-page {
-  min-width: 440px;
-  max-width: 720px;
-  width: clamp(440px, 46vw, 720px);
-  margin: 12px 18px 18px 0;
+  /* Fill what the cover + gap leave. The row gap keeps it off the art;
+     padding-right on the stage keeps it off the window edge. */
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  margin: 0 !important;
+  align-self: stretch !important;
 }
 
 /* 2026-08 YTM: #side-panel in the fullscreen now-playing layout (phase 8).
@@ -65,7 +69,8 @@ html[data-glassy-quality]:has(
     width: auto !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: min(88vh, 900px) !important;
+    height: 100% !important;
+    max-height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     z-index: 2 !important;
@@ -124,16 +129,16 @@ html[data-glassy-quality]:has(
     pointer-events: none !important;
   }
 
-  /* Living-room scale for the lines. */
-  & ytmusic-player-page {
-    --glassy-lyric-size: clamp(2.4rem, 3.4vw, 4.4rem);
+  /* Living-room scale for the lines. cqw is the stage wrapper. */
+  & #side-panel.ytmusic-player-page {
+    --glassy-lyric-size: clamp(2.6rem, 3.8cqw, 4.8rem);
     --glassy-lyric-rise: 1.1rem;
   }
 
   & #synced-lyrics-container .lyric-container {
     box-sizing: border-box !important;
     width: 100% !important;
-    max-width: 980px !important;
+    max-width: min(1100px, 100%) !important;
     margin-inline: auto !important;
     padding: 24px 32px 40px !important;
     text-align: center !important;

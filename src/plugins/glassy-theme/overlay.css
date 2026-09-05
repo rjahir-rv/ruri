@@ -396,7 +396,11 @@ html[data-glassy-quality]
 /* Song-page / fullscreen cover square. Do not apply in MINIPLAYER: YTM
    reuses #player as the bottom-right home thumbnail and owns its size and
    position. `position: relative` + `--glassy-art` pulled that thumbnail
-   into the closed player-page. Polymer also reflects player-ui-state_. */
+   into the closed player-page. Polymer also reflects player-ui-state_.
+
+   #main-panel owns the square size (set per-mode below). #player fills it.
+   min-width: 0 is what lets the column shrink when the guide opens;
+   aspect-ratio keeps the cover a square instead of a rectangle. */
 html[data-glassy-quality]
   ytmusic-player-page:is(
     [player-ui-state='PLAYER_PAGE_OPEN'],
@@ -409,13 +413,12 @@ html[data-glassy-quality]
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
-    height: 100% !important;
-    max-height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
     background: transparent !important;
   }
 
-  /* #player IS <ytmusic-player id="player" class="style-scope ytmusic-player-page">.
-     Size only from --glassy-art so flex layout cannot shrink or stretch it. */
+  /* #player IS <ytmusic-player id="player" class="style-scope ytmusic-player-page">. */
   & #player.ytmusic-player-page,
   & #av-id ~ #player.ytmusic-player-page {
     position: relative !important;
@@ -424,13 +427,13 @@ html[data-glassy-quality]
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    flex: 0 0 auto !important;
-    width: var(--glassy-art) !important;
-    height: var(--glassy-art) !important;
-    min-width: var(--glassy-art) !important;
-    min-height: var(--glassy-art) !important;
-    max-width: var(--glassy-art) !important;
-    max-height: var(--glassy-art) !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     aspect-ratio: 1 / 1 !important;
     margin: auto !important;
     padding: 0 !important;
@@ -515,6 +518,77 @@ html[data-glassy-quality]
   }
 }
 
+/* Song page (not fullscreen): two-column stage that tracks the space left
+   by the guide / nav / player bar. The unnamed wrapper is the flex row AND
+   the size container, so --glassy-art on its children uses cqw/cqh of the
+   stage rather than the viewport. */
+html[data-glassy-quality]
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  ) {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+
+  /* Flex row is the element that holds BOTH columns. `:has(> #main-panel)`
+     alone can match a left-only wrapper and center the cover inside it,
+     which glued the art to the side-panel. */
+  &:has(> #main-panel):has(> #side-panel),
+  & :has(> #main-panel):has(> #side-panel) {
+    container-type: size;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    /* flex-start + guide inset: space-between pinned the cover to the
+       mini-guide; center dumped leftover on both sides and ate the gutter. */
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 20px 40px 20px calc(80px + 32px) !important;
+    gap: clamp(56px, 5.5vw, 112px) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  /* cqw/cqh resolve against the nearest ancestor container (the row). */
+  &:has(> #main-panel):has(> #side-panel) > *,
+  & :has(> #main-panel):has(> #side-panel) > * {
+    --glassy-art: min(40cqw, 78cqh, 640px);
+  }
+
+  & #main-panel.ytmusic-player-page {
+    box-sizing: border-box !important;
+    flex: 0 1 auto !important;
+    align-self: center !important;
+    width: var(--glassy-art) !important;
+    height: var(--glassy-art) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+}
+
+/* Expanded YTM guide overlays the player-page; keep the cover off it. */
+html[data-glassy-quality]:has(tp-yt-app-drawer[opened])
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  ):has(> #main-panel):has(> #side-panel),
+html[data-glassy-quality]:has(tp-yt-app-drawer[opened])
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  )
+  :has(> #main-panel):has(> #side-panel) {
+  padding-inline-start: calc(240px + 28px) !important;
+}
+
 /* 2026-08 YTM: fullscreen now-playing layout (phase 8) — cover left, lyrics
    right. Verified against the live DOM in fullscreen:
 
@@ -526,8 +600,8 @@ html[data-glassy-quality]
    The wrapper is why an earlier pass failed: the row was declared on the page,
    which only has that one child, so #main-panel kept sizing itself from the
    <img> intrinsic width (272px against a 960px column) and the cover came out
-   as a tall rectangle. Sizing lives in --glassy-art; here we only swap its
-   value and lay out the two columns. */
+   as a tall rectangle. Sizing lives in --glassy-art on the wrapper's children
+   (cqw/cqh of the stage). */
 html[data-glassy-quality]:has(
     ytmusic-player-page[player-ui-state='FULLSCREEN'],
     ytmusic-app-layout[player-ui-state='FULLSCREEN'],
@@ -546,23 +620,79 @@ html[data-glassy-quality]:has(
     background: transparent !important;
   }
 
-  & ytmusic-player-page > div:has(> #main-panel) {
+  & ytmusic-player-page:has(> #main-panel):has(> #side-panel),
+  & ytmusic-player-page :has(> #main-panel):has(> #side-panel) {
+    container-type: size;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
     box-sizing: border-box !important;
     width: 100% !important;
     height: 100% !important;
     max-height: 100dvh !important;
-    padding: 40px 56px !important;
-    gap: 48px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 32px 56px !important;
+    gap: clamp(72px, 6.5vw, 140px) !important;
     overflow: hidden !important;
     background: transparent !important;
   }
 
-  /* Left column is exactly the square — no auto width to be derived from the
-     <img> intrinsic size, no stretch from the column's height. */
+  & ytmusic-player-page:has(> #main-panel):has(> #side-panel) > *,
+  & ytmusic-player-page :has(> #main-panel):has(> #side-panel) > * {
+    --glassy-art: min(42cqw, calc(100cqh - 96px), 880px);
+  }
+
+  /* No lyrics: collapse already sets the column width to 0; centre a larger
+     cover in the leftover stage instead of leaving it parked on the left. */
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    ):has(> #main-panel):has(> #side-panel),
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    )
+    :has(> #main-panel):has(> #side-panel) {
+    justify-content: center !important;
+  }
+
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    ):has(> #main-panel):has(> #side-panel)
+    > *,
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    )
+    :has(> #main-panel):has(> #side-panel)
+    > * {
+    --glassy-art: min(72cqw, calc(100cqh - 96px), 920px);
+  }
+
+  /* Left column is the square — shrinkable, never stretched by the <img>. */
   & #main-panel.ytmusic-player-page {
     position: relative !important;
     inset: auto !important;
@@ -570,13 +700,14 @@ html[data-glassy-quality]:has(
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
-    flex: 0 0 auto !important;
+    flex: 0 1 auto !important;
     width: var(--glassy-art) !important;
     height: var(--glassy-art) !important;
-    min-width: var(--glassy-art) !important;
-    min-height: var(--glassy-art) !important;
-    max-width: var(--glassy-art) !important;
-    max-height: var(--glassy-art) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: min(var(--glassy-art), 100%) !important;
+    max-height: min(var(--glassy-art), 100%) !important;
+    aspect-ratio: 1 / 1 !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;

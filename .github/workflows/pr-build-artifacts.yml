@@ -68,7 +68,7 @@ jobs:
 
       - name: Package macOS
         if: startsWith(matrix.os, 'macOS')
-        run: pnpm exec electron-builder --mac dmg:x64 dmg:arm64 -p never
+        run: pnpm exec electron-builder --mac dmg:x64 dmg:arm64 -p never -c.mac.icon=assets/generated/icons/png/1024x1024.png
 
       - name: Upload artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f

@@ -24,21 +24,27 @@
 
 ## Install
 
-Unsigned first release. Output of a local `electron-builder` run lands in `pack/`. GitHub Releases should attach the same files.
-
-| Platform | Artifact | Notes |
-| --- | --- | --- |
-| Linux x64 | `Ruri-0.1.0.AppImage` | `chmod +x` then run |
-| Linux x64 | `ruri-0.1.0.tar.gz` | Portable tree |
-| Windows x64 | `Ruri 0.1.0.exe` | Portable |
-| Windows x64 | `Ruri Setup 0.1.0.exe` | NSIS |
-| macOS | — | Package on a Mac (`pnpm dist:mac`). Linux cannot run `actool` |
+Unsigned builds. GitHub Actions packages Linux, Windows, and macOS when you push a `v*` tag:
 
 ```bash
-# Linux AppImage
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+That runs [Release](.github/workflows/release.yml) and attaches files to the GitHub Release. You can also run the workflow by hand from the Actions tab (artifacts only, no Release).
+
+| Platform | Artifact |
+| --- | --- |
+| Linux x64 | `Ruri-*.AppImage`, `ruri-*.tar.gz`, `ruri_*_amd64.deb` |
+| Windows x64 | `Ruri *.exe` (portable) and `Ruri Setup *.exe` (NSIS) |
+| macOS | `Ruri-*-mac.zip` / `.dmg` (x64 and arm64) |
+
+```bash
 chmod +x Ruri-0.1.0.AppImage
 ./Ruri-0.1.0.AppImage
 ```
+
+Local packaging still works: `pnpm build` then `pnpm exec electron-builder --linux AppImage:x64 tar.gz:x64 -p never`. Output: `pack/`.
 
 This repository stays MIT. Do not vendor GPL-3.0 code (Better Lyrics, Glassy Music Merge Theme, or related extensions).
 

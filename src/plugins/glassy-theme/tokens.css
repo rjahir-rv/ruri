@@ -8,12 +8,14 @@
   --glassy-radius-lg: 18px;
   --glassy-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --glassy-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-  /* Album artwork square. Everything in the player chain sizes off this, so
-     the cover can never be stretched into a rectangle by a parent's box. */
-  --glassy-art: min(40vw, 54vh, 460px);
-  --glassy-art-fullscreen: min(38vw, 60vh, 500px);
-  /* Optical lift so the cover sits in the stage above the player bar. */
-  --glassy-art-fullscreen-shift: -56px;
+  /* Album artwork square. Viewport fallbacks only — the player-page stage
+     redefines these with cqw/cqh so the cover tracks the space left by the
+     guide / nav / player bar. Keep the square; do not lock a pixel size. */
+  --glassy-art: min(42vw, 62vh, 560px);
+  --glassy-art-fullscreen: min(46vw, 72vh, 920px);
+  /* Modest lift so the cover sits in the stage above the player bar. Larger
+     covers (the old -56px assumed a 500px square) overflow the titlebar. */
+  --glassy-art-fullscreen-shift: -24px;
   --glassy-artwork-shadow:
     0 24px 60px rgba(0, 0, 0, 0.65), 0 8px 24px rgba(0, 0, 0, 0.45);
   --glassy-hover: rgba(255, 255, 255, 0.1);
