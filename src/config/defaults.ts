@@ -11,6 +11,12 @@ export interface WindowPositionConfig {
 export const MIN_WINDOW_WIDTH = 1100;
 export const MIN_WINDOW_HEIGHT = 620;
 
+/* First-launch size. 16:9, above the minimum so the player page (cover +
+   side panel) and README shots have room; GitHub's ~920px embed downscales
+   cleanly from 1600. */
+export const DEFAULT_WINDOW_WIDTH = 1600;
+export const DEFAULT_WINDOW_HEIGHT = 900;
+
 export function getWindowMinSize(disableMinSize: boolean): {
   minWidth: number;
   minHeight: number;
@@ -57,8 +63,8 @@ export interface DefaultConfig {
 
 export const defaultConfig: DefaultConfig = {
   'window-size': {
-    width: MIN_WINDOW_WIDTH,
-    height: MIN_WINDOW_HEIGHT,
+    width: DEFAULT_WINDOW_WIDTH,
+    height: DEFAULT_WINDOW_HEIGHT,
   },
   'window-maximized': false,
   'window-position': {
