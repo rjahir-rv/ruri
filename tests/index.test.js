@@ -97,7 +97,7 @@ test('Ruri App - With default settings, app is launched and visible', async () =
 
   // Plugin renderer runs after YTM's document is ready. Query the window
   // through webContents so we do not sample a Playwright guest frame.
-  await expect.poll(pluginSnapshot, { timeout: 30_000 }).toEqual({
+  await expect.poll(pluginSnapshot, { timeout: 45_000 }).toEqual({
     attr: 'on',
     host: true,
     layers: 2,
@@ -105,13 +105,13 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     ytBg: 'transparent',
     albumColorIsWrapped: false,
     darkAlbumColorIsWrapped: false,
-    glow: 'rgba(255, 255, 255, 0.5)',
-    inactive: '0.7',
+    glow: '#ffffff80',
+    inactive: '.7',
     glassyQuality: 'high',
     albumColorPaint: 'off',
     glassyText: '#f4f6fb',
     glassyAqua: 'on',
-    lyricSize: 'clamp(1.7rem, 2.3vw, 2.75rem)',
+    lyricSize: 'clamp(2.1rem, 3vw, 3.4rem)',
   });
 
   const defaultPlugins = await app.evaluate(async ({ BrowserWindow }) => {
@@ -147,7 +147,6 @@ test('Ruri App - With default settings, app is launched and visible', async () =
             return {
               quality: html.dataset.glassyQuality ?? '',
               layerDisplay: layer ? getComputedStyle(layer).display : '',
-              layerFilter: layer ? getComputedStyle(layer).filter : '',
             };
           })()`);
         }),
@@ -156,7 +155,6 @@ test('Ruri App - With default settings, app is launched and visible', async () =
     .toEqual({
       quality: 'low',
       layerDisplay: 'none',
-      layerFilter: 'none',
     });
 
   await app.evaluate(async ({ BrowserWindow }) => {

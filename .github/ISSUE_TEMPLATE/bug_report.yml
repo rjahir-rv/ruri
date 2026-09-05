@@ -28,7 +28,7 @@ body:
     label: Checklists
     options:
       - label: I use a portable build.
-      - label: I can reproduce this issue in the [official web YouTube Music](https://music.youtube.com).
+      - label: I can reproduce this on the official website the shell loads (so it is not a Ruri-only bug).
 - type: dropdown
   id: os
   attributes:

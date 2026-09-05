@@ -55,12 +55,23 @@ function brandDocumentTitle() {
 function observeDocumentTitle() {
   const titleEl = document.querySelector('title');
   if (!titleEl) {
+    const root = document.head ?? document.documentElement;
+    if (!root) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', observeDocumentTitle, {
+          once: true,
+        });
+      } else {
+        queueMicrotask(observeDocumentTitle);
+      }
+      return;
+    }
     new MutationObserver((_records, observer) => {
       if (document.querySelector('title')) {
         observer.disconnect();
         observeDocumentTitle();
       }
-    }).observe(document.head ?? document.documentElement, { childList: true });
+    }).observe(root, { childList: true });
     return;
   }
 

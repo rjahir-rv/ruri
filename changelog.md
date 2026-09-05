@@ -6,8 +6,13 @@ Ruri starts as a fork of [pear-devs/pear-desktop](https://github.com/pear-devs/p
 
 #### v0.1.0 (unreleased)
 
-> 19 August 2026
+> 5 September 2026
 
+- feat: glassy theme, backdrop, and album-color chrome on by default
+- feat: in-app plugin gallery (Windows/Linux; native traffic lights on macOS)
+- feat: fullscreen lyrics hand-off from glassy theme
+- feat: `ruri://` protocol and 1100×620 minimum window
+- fix: inject renderer only after the document root exists (plugins were never loading)
 - chore: rebrand fork as Ruri (`dev.ruri.desktop`) with MIT NOTICE
 - chore: replace Pear/YouTube-style icon with an original lapis-glass mark
 - ci: stop inheriting Pear auto-release and winget publish
