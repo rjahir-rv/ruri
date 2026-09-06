@@ -1,9 +1,11 @@
+import { getSongInfo } from '@/providers/song-info-front';
 import { createRenderer } from '@/utils';
 import { waitForElement } from '@/utils/wait-for-element';
 
+import { setLyricsRuntime } from './lyrics-debug';
 import { disposeReactiveRoot } from './reactive-root';
 import { setConfig, setCurrentTime } from './renderer';
-import { fetchLyrics } from './store';
+import { fetchLyrics, markLyricsConfigReady } from './store';
 import { selectors, tabStates } from './utils';
 
 import type { SyncedLyricsPluginConfig } from '../types';
@@ -22,12 +24,23 @@ export const renderer = createRenderer<
     observerCallback: MutationCallback;
     observer?: MutationObserver;
     videoDataChange: () => Promise<void>;
+    videoDataChangeGeneration: number;
     updateTimestampInterval?: NodeJS.Timeout | string | number;
   },
   SyncedLyricsPluginConfig
 >({
+  videoDataChangeGeneration: 0,
+
   onConfigChange(newConfig) {
     setConfig(newConfig);
+    setLyricsRuntime({
+      debug: newConfig.debug,
+      preferredProvider: newConfig.preferredProvider,
+    });
+    const current = getSongInfo();
+    if (current.videoId) {
+      fetchLyrics(current);
+    }
   },
 
   observerCallback(mutations: MutationRecord[]) {
@@ -53,6 +66,8 @@ export const renderer = createRenderer<
     await this.videoDataChange();
   },
   async videoDataChange() {
+    const generation = ++this.videoDataChangeGeneration;
+
     if (!this.updateTimestampInterval) {
       this.updateTimestampInterval = setInterval(
         () => setCurrentTime((_ytAPI?.getCurrentTime() ?? 0) * 1000),
@@ -66,6 +81,8 @@ export const renderer = createRenderer<
 
     // Force the lyrics tab to be enabled at all times.
     const header = await waitForElement<HTMLElement>(selectors.head);
+    if (generation !== this.videoDataChangeGeneration) return;
+
     {
       header.removeAttribute('disabled');
       tabStates[header.ariaSelected ?? 'false']();
@@ -78,11 +95,23 @@ export const renderer = createRenderer<
   async start(ctx: RendererContext<SyncedLyricsPluginConfig>) {
     netFetch = ctx.ipc.invoke.bind(ctx.ipc, 'synced-lyrics:fetch');
 
-    setConfig(await ctx.getConfig());
+    const cfg = await ctx.getConfig();
+    setConfig(cfg);
+    setLyricsRuntime({
+      debug: cfg.debug,
+      preferredProvider: cfg.preferredProvider,
+    });
+    markLyricsConfigReady();
 
     ctx.ipc.on('peard:update-song-info', (info: SongInfo) => {
       fetchLyrics(info);
     });
+
+    // Catch a first song whose IPC arrived before this handler existed.
+    const current = getSongInfo();
+    if (current.videoId) {
+      fetchLyrics(current);
+    }
   },
 
   stop() {

@@ -12,6 +12,8 @@ body:
         required: true
       - label: I have searched this repository's issue tracker for a matching request, without success.
         required: true
+      - label: I understand that Ruri has NO affiliation with Google, YouTube, Pear Desktop, or Glassy Music.
+        required: true
 - type: textarea
   attributes:
     label: Problem Description

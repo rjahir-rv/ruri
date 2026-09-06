@@ -10,8 +10,7 @@ permissions: {}
 env:
   NODE_VERSION: "24.x"
 
-# Compile only. Do not run Pear's release/publish jobs.
-# Signed releases are a later phase (see AGENTS.md Fase 6).
+# Compile only. Unsigned 0.1.0 artifacts are attached to the GitHub Release by hand.
 
 jobs:
   build:

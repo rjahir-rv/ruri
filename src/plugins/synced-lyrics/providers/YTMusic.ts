@@ -25,7 +25,9 @@ export class YTMusic implements LyricProvider {
     const { tabs } =
       data?.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer
         ?.watchNextTabbedResultsRenderer ?? {};
-    if (!Array.isArray(tabs)) return null;
+    if (!Array.isArray(tabs)) {
+      throw new Error('ytmusic watch-next tabs are not ready yet');
+    }
 
     const lyricsTab = tabs.find((it) => {
       const pageType = it?.tabRenderer?.endpoint?.browseEndpoint
@@ -37,10 +39,14 @@ export class YTMusic implements LyricProvider {
     if (!lyricsTab) return null;
 
     const { browseId } = lyricsTab?.tabRenderer?.endpoint?.browseEndpoint ?? {};
-    if (!browseId) return null;
+    if (!browseId) {
+      throw new Error('ytmusic lyrics browseId is missing');
+    }
 
     const { contents } = await this.fetchBrowse(browseId);
-    if (!contents) return null;
+    if (!contents) {
+      throw new Error('ytmusic lyrics browse payload is empty');
+    }
 
     /*
       NOTE: Due to the nature of the library, the json responses are not consistent,
@@ -76,6 +82,13 @@ export class YTMusic implements LyricProvider {
       return null;
     }
 
+    if (
+      !synced?.length &&
+      !(typeof plain === 'string' && plain.trim().length > 0)
+    ) {
+      return null;
+    }
+
     if (synced?.length && synced[0].timeInMs > 300) {
       synced.unshift({
         duration: 0,
@@ -97,8 +110,10 @@ export class YTMusic implements LyricProvider {
 
   private millisToTime(millis: number) {
     const minutes = Math.floor(millis / 60000);
-    const seconds = Math.floor((millis - ((minutes * 60) * 1000)) / 1000);
-    const remaining = (millis - ((minutes * 60) * 1000) - (seconds * 1000)) / 10;
+    const minutesMs = minutes * 60 * 1000;
+    const seconds = Math.floor((millis - minutesMs) / 1000);
+    const secondsMs = seconds * 1000;
+    const remaining = (millis - minutesMs - secondsMs) / 10;
     return `${minutes.toString().padStart(2, '0')}:${seconds
       .toString()
       .padStart(2, '0')}.${remaining.toString().padStart(2, '0')}`;
@@ -110,7 +125,12 @@ export class YTMusic implements LyricProvider {
   private fetchNext(videoId: string) {
     const app = document.querySelector<MusicPlayerAppElement>('ytmusic-app');
 
-    if (!app) return null;
+    // The app shell (or its network manager) may not be wired up yet when the
+    // first song of a session starts. That is transient, so throw instead of
+    // returning null: null would be cached as a definitive "no lyrics".
+    if (!app?.networkManager) {
+      throw new Error('ytmusic-app is not ready yet');
+    }
 
     return app.networkManager.fetch<
       NextData,
@@ -122,15 +142,26 @@ export class YTMusic implements LyricProvider {
     });
   }
 
-  private fetchBrowse(browseId: string) {
-    return fetch(this.PROXIED_ENDPOINT + 'browse?prettyPrint=false', {
-      headers,
-      method: 'POST',
-      body: JSON.stringify({
-        browseId,
-        context: { client },
-      }),
-    }).then((res) => res.json()) as Promise<BrowseData>;
+  private async fetchBrowse(browseId: string) {
+    const res = await fetch(
+      this.PROXIED_ENDPOINT + 'browse?prettyPrint=false',
+      {
+        headers,
+        method: 'POST',
+        body: JSON.stringify({
+          browseId,
+          context: { client },
+        }),
+      },
+    );
+
+    // The proxy is rate limited (2 req/s); a 429/5xx is transient and must not
+    // be swallowed into a cached "no lyrics" result.
+    if (!res.ok) {
+      throw new Error(`bad HTTPStatus(${res.status} ${res.statusText})`);
+    }
+
+    return (await res.json()) as BrowseData;
   }
 }
 

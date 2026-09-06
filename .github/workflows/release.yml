@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  NODE_VERSION: "24.x"
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+jobs:
+  package:
+    name: Package ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 11
+          run_install: false
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check
+        if: matrix.name == 'linux'
+        run: pnpm check
+
+      - name: Vite build
+        run: pnpm build
+
+      - name: Package Linux
+        if: matrix.name == 'linux'
+        run: pnpm exec electron-builder --linux AppImage:x64 tar.gz:x64 deb:x64 -p never
+
+      - name: Package Windows
+        if: matrix.name == 'windows'
+        run: pnpm exec electron-builder --win portable:x64 nsis:x64 -p never
+
+      - name: Package macOS
+        if: matrix.name == 'macos'
+        # PNG icon so packaging does not require Xcode 26 Icon Composer (.icon).
+        run: pnpm exec electron-builder --mac dmg:x64 dmg:arm64 -p never -c.mac.icon=assets/generated/icons/png/1024x1024.png
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ruri-${{ matrix.name }}
+          path: |
+            pack/*.AppImage
+            pack/*.tar.gz
+            pack/*.deb
+            pack/*.exe
+            pack/*.dmg
+            pack/*.zip
+            pack/*.blockmap
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: GitHub Release
+    needs: package
+    if: >-
+      always() && !cancelled() &&
+      github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          path: release-files
+          merge-multiple: true
+          pattern: ruri-*
+
+      - name: Publish release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+        with:
+          files: release-files/*
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          draft: false

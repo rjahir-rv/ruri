@@ -30,6 +30,7 @@ import { languageResources } from 'virtual:i18n';
 import { allPlugins, mainPlugins } from 'virtual:plugins';
 
 import * as config from '@/config';
+import { getWindowMinSize } from '@/config/defaults';
 import { APPLICATION_NAME, loadI18n, setLanguage, t } from '@/i18n';
 import {
   forceLoadMainPlugin,
@@ -43,8 +44,8 @@ import { defaultAuthProxyConfig } from '@/plugins/auth-proxy-adapter/config';
 import { fileExists, injectCSS, injectCSSAsFile } from '@/plugins/utils/main';
 import { restart, setupAppControls } from '@/providers/app-controls';
 import {
-  APP_PROTOCOL,
-  handleProtocol,
+  dispatchProtocolUrl,
+  findProtocolUrl,
   setupProtocolHandler,
 } from '@/providers/protocol-handler';
 import { setupSongInfo } from '@/providers/song-info';
@@ -67,6 +68,11 @@ electronUpdater.autoUpdater.autoDownload = false;
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.exit();
+} else {
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    dispatchProtocolUrl(url);
+  });
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -143,6 +149,16 @@ if (disableHardwareAcceleration) {
 // Apply disabled features
 app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','));
 
+app.setAboutPanelOptions({
+  applicationName: 'Ruri',
+  applicationVersion: app.getVersion(),
+  copyright: '© 2026 rjahir-rv. MIT License.',
+  website: 'https://github.com/rjahir-rv/ruri',
+  credits:
+    'A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.',
+  authors: ['rjahir-rv', 'Pear contributors'],
+});
+
 if (config.get('options.proxy')) {
   const authProxyEnabled = await config.plugins.isEnabled('auth-proxy-adapter');
 
@@ -164,9 +180,11 @@ if (config.get('options.proxy')) {
   app.commandLine.appendSwitch('proxy-server', proxyToUse);
 }
 
-// Adds debug features like hotkeys for triggering dev tools and reload
+// Adds debug features like hotkeys for triggering dev tools and reload.
+// Detach so docked tools cannot shrink the YTM viewport below desktop chrome.
 electronDebug({
-  showDevTools: false, // Disable automatic devTools on new window
+  showDevTools: false,
+  devToolsMode: 'detach',
 });
 
 let icon = 'assets/icon.png';
@@ -317,11 +335,37 @@ function initTheme(win: BrowserWindow) {
   }
 
   win.webContents.once('did-finish-load', () => {
-    if (is.dev()) {
+    if (is.dev() && !isTesting()) {
       console.debug(LoggerPrefix, t('main.console.did-finish-load.dev-tools'));
-      win.webContents.openDevTools();
+      win.webContents.openDevTools({ mode: 'detach' });
     }
   });
+}
+
+function restoreRendererViewport(win: BrowserWindow) {
+  const run = () => {
+    if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+
+    // Chromium often keeps the DevTools-shrunk 100vh / matchMedia after the
+    // dock closes. A 1px content-size nudge forces a real layout pass. Skip
+    // when maximized or fullscreen so we do not drop those states.
+    if (!win.isMaximized() && !win.isFullScreen()) {
+      const [width, height] = win.getContentSize();
+      if (width > 0 && height > 0) {
+        win.setContentSize(width, height + 1);
+        win.setContentSize(width, height);
+      }
+    }
+
+    win.webContents.send('peard:viewport-restore');
+  };
+
+  setTimeout(run, 0);
+  setTimeout(run, 80);
+}
+
+function resolveWindowTitle(): string {
+  return config.get('options.customWindowTitle') || APPLICATION_NAME;
 }
 
 async function createMainWindow() {
@@ -353,12 +397,17 @@ async function createMainWindow() {
     delete decorations.titleBarStyle;
   }
 
+  const { minWidth, minHeight } = getWindowMinSize(
+    config.get('options.disableMinSize'),
+  );
+
   const electronWindowSettings: Electron.BrowserWindowConstructorOptions = {
     icon,
+    title: resolveWindowTitle(),
     width: windowSize.width,
     height: windowSize.height,
-    minWidth: 325,
-    minHeight: 425,
+    minWidth,
+    minHeight,
     backgroundColor: '#000',
     show: false,
     webPreferences: {
@@ -396,12 +445,14 @@ async function createMainWindow() {
 
     const scaledX = windowX;
     const scaledY = windowY;
+    const halfWidth = scaledWidth / 2;
+    const halfHeight = scaledHeight / 2;
 
     if (
-      scaledX + (scaledWidth / 2) < display.bounds.x - 8 || // Left
-      scaledX + (scaledWidth / 2) > display.bounds.x + display.bounds.width || // Right
+      scaledX + halfWidth < display.bounds.x - 8 || // Left
+      scaledX + halfWidth > display.bounds.x + display.bounds.width || // Right
       scaledY < display.bounds.y - 8 || // Top
-      scaledY + (scaledHeight / 2) > display.bounds.y + display.bounds.height // Bottom
+      scaledY + halfHeight > display.bounds.y + display.bounds.height // Bottom
     ) {
       // Window is offscreen
       if (is.dev()) {
@@ -502,6 +553,12 @@ async function createMainWindow() {
         ),
       });
     }
+  });
+  win.webContents.on('devtools-closed', () => {
+    restoreRendererViewport(win);
+  });
+  win.webContents.on('devtools-opened', () => {
+    restoreRendererViewport(win);
   });
   win.webContents.on('will-redirect', (event) => {
     const url = URL.parse(event.url);
@@ -609,6 +666,7 @@ app.once('browser-window-created', (_event, win) => {
   const customWindowTitle = config.get('options.customWindowTitle');
 
   if (customWindowTitle) {
+    win.setTitle(customWindowTitle);
     win.on('page-title-updated', (event) => {
       event.preventDefault();
       win.setTitle(customWindowTitle);
@@ -766,22 +824,32 @@ app.whenReady().then(async () => {
 
   setupProtocolHandler(mainWindow);
 
+  const launchProtocolUrl = findProtocolUrl(process.argv);
+  if (launchProtocolUrl) {
+    if (is.dev()) {
+      console.debug(
+        LoggerPrefix,
+        t('main.console.second-instance.receive-command', {
+          command: launchProtocolUrl,
+        }),
+      );
+    }
+    dispatchProtocolUrl(launchProtocolUrl);
+  }
+
   app.on('second-instance', (_, commandLine) => {
-    const uri = `${APP_PROTOCOL}://`;
-    const protocolArgv = commandLine.find((arg) => arg.startsWith(uri));
+    const protocolArgv = findProtocolUrl(commandLine);
     if (protocolArgv) {
-      const lastIndex = protocolArgv.endsWith('/') ? -1 : undefined;
-      const command = protocolArgv.slice(uri.length, lastIndex);
       if (is.dev()) {
         console.debug(
           LoggerPrefix,
-          t('main.console.second-instance.receive-command', { command }),
+          t('main.console.second-instance.receive-command', {
+            command: protocolArgv,
+          }),
         );
       }
-
-      const splited = decodeURIComponent(command).split(' ');
-
-      handleProtocol(splited.shift()!, ...splited);
+      dispatchProtocolUrl(protocolArgv);
+      // A deep link is a remote control: do not steal focus / unhide the window.
       return;
     }
 
@@ -811,8 +879,7 @@ app.whenReady().then(async () => {
       clearTimeout(updateTimeout);
     }, 2000);
     electronUpdater.autoUpdater.on('update-available', () => {
-      const downloadLink =
-        'https://github.com/rjahir-rv/ruri/releases/latest';
+      const downloadLink = 'https://github.com/rjahir-rv/ruri/releases/latest';
       const dialogOptions: Electron.MessageBoxOptions = {
         type: 'info',
         buttons: [

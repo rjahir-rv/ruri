@@ -78,8 +78,18 @@
         "title": "Actualización disponible"
       }
     },
+    "about": {
+      "close": "Cerrar",
+      "description": "Un cliente de escritorio para YouTube Music, diseñado con superficies translúcidas y una experiencia de escucha enfocada.",
+      "disclaimer": "No está afiliado con Google ni YouTube.",
+      "github": "GitHub",
+      "license": "Licencia MIT",
+      "title": "Acerca de Ruri",
+      "version": "v{{version}}"
+    },
     "menu": {
       "about": "Acerca de",
+      "about-app": "Acerca de {{appName}}",
       "navigation": {
         "label": "Navegación",
         "submenu": {
@@ -185,9 +195,22 @@
         }
       },
       "plugins": {
+        "close": "Cerrar",
+        "empty": "Ningún complemento coincide",
         "enabled": "Habilitado",
         "label": "Complementos",
-        "new": "NUEVO"
+        "locked": "Necesario para la barra de menú",
+        "new": "NUEVO",
+        "restart-needed": "Reinicio necesario",
+        "search": "Buscar complementos",
+        "sections": {
+          "all": "Todos",
+          "appearance": "Apariencia",
+          "apps": "Apps",
+          "lyrics": "Letras",
+          "playback": "Reproducción",
+          "system": "Sistema"
+        }
       },
       "view": {
         "label": "Ver",
@@ -838,8 +861,12 @@
     "synced-lyrics": {
       "description": "Proporciona letras de canciones sincronizadas, utilizando proveedores como LRClib.",
       "errors": {
+        "details": "Detalles técnicos",
         "fetch": "⚠️\tSe produjo un error al obtener la letra.\n\tPor favor, inténtelo de nuevo más tarde.",
-        "not-found": "⚠️ No se han encontrado letras para esta canción."
+        "not-found": "No se encontró la letra de esta canción.",
+        "offline": "Parece que no tienes conexión. Revisa tu red e inténtalo de nuevo.",
+        "provider-failed": "{{provider}} no respondió. Inténtalo de nuevo o cambia de proveedor con las flechas de arriba.",
+        "title": "No se pudo cargar la letra"
       },
       "menu": {
         "convert-chinese-character": {

@@ -1,0 +1,921 @@
+/* Overlay is inert unless the renderer set data-glassy-quality.
+   Pear does not remove adoptedStyleSheets on plugin unload. */
+
+html[data-glassy-quality]
+  :is(
+    #nav-bar-background,
+    #player-bar-background,
+    ytmusic-player-bar,
+    ytmusic-search-box,
+    #guide-wrapper,
+    #mini-guide-background,
+    #side-panel.ytmusic-player-page,
+    ytmusic-menu-popup-renderer,
+    tp-yt-paper-listbox,
+    tp-yt-paper-dialog
+  ) {
+  transition:
+    background-color 300ms var(--glassy-ease),
+    border-color 300ms var(--glassy-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-glassy-quality]
+    :is(
+      #nav-bar-background,
+      #player-bar-background,
+      ytmusic-player-bar,
+      ytmusic-search-box,
+      #guide-wrapper,
+      #mini-guide-background,
+      #side-panel.ytmusic-player-page,
+      ytmusic-menu-popup-renderer,
+      tp-yt-paper-listbox,
+      tp-yt-paper-dialog
+    ) {
+    transition: none;
+  }
+}
+
+/* 2026-08 YTM: #nav-bar-background — sibling of ytmusic-nav-bar. YTM paints
+   an opaque strip (and a #nav-bar-divider hairline) that reads as a separate
+   panel over the backdrop. Punch it so logo + search sit on the page wash.
+   Keep opacity 1 so YTM does not hide the node; keep height (in-app-menu math).
+   !important: YTM inline/stylesheet background, border, and opacity win. */
+html[data-glassy-quality] #nav-bar-background {
+  background: transparent !important;
+  opacity: 1 !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none;
+}
+
+html[data-glassy-quality='high'] #nav-bar-background {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality] ytmusic-nav-bar {
+  background: transparent !important;
+}
+
+/* 2026-08 YTM: #nav-bar-divider — hairline under the nav. */
+html[data-glassy-quality] #nav-bar-divider {
+  display: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  border: none !important;
+}
+
+/* 2026-08 YTM: #player-bar-background + ytmusic-player-bar — YTM paints both
+   opaque. Frost the fill; keep the bar's hit targets and seekbar intact.
+   !important: same specificity fight as the nav background. */
+html[data-glassy-quality] #player-bar-background {
+  background: var(--glassy-tint-album) !important;
+  opacity: 1 !important;
+  border-top: var(--glassy-border);
+  box-shadow: var(--glassy-highlight);
+}
+
+html[data-glassy-quality] ytmusic-player-bar {
+  background: transparent !important;
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.title, yt-formatted-string.title, #song-title) {
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.subtitle, .byline, .time-info, yt-formatted-string.byline) {
+  color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] .menu.ytmusic-player-bar {
+  --iron-icon-fill-color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] .volume-slider.ytmusic-player-bar,
+html[data-glassy-quality] .expand-volume-slider.ytmusic-player-bar {
+  --paper-slider-container-color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality='high'] #player-bar-background {
+  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate)) !important;
+  -webkit-backdrop-filter: blur(var(--glassy-blur))
+    saturate(var(--glassy-saturate)) !important;
+}
+
+/* 2026-08 YTM: ytmusic-search-box — field in the nav. Host used to be a
+   raised glass card (border + drop shadow + overflow:hidden) which clipped
+   the input and hid #suggestions / #suggestion-list. Sit flush in the nav;
+   glass lives on the dropdown, not the idle field.
+   !important on host fill/border/shadow: YTM (and bauhaus) paint those on
+   the custom element. --ytmusic-search-background inherits into shady DOM. */
+html[data-glassy-quality] ytmusic-search-box {
+  --ytmusic-search-background: transparent;
+  --iron-icon-fill-color: var(--glassy-text-muted);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+  border-radius: var(--glassy-search-radius);
+}
+
+html[data-glassy-quality] ytmusic-search-box .search-box,
+html[data-glassy-quality] .search-box.ytmusic-search-box {
+  /* !important: YTM paints an opaque fill on .search-box once [opened]. */
+  background: var(--glassy-search-fill) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--glassy-search-radius);
+  box-shadow: var(--glassy-highlight);
+  backdrop-filter: blur(12px) saturate(var(--glassy-saturate));
+  -webkit-backdrop-filter: blur(12px) saturate(var(--glassy-saturate));
+}
+
+html[data-glassy-quality] ytmusic-search-box:not([opened]) .search-box:hover,
+html[data-glassy-quality]
+  ytmusic-search-box:not([opened])
+  .search-box.ytmusic-search-box:hover {
+  background: var(--glassy-hover) !important;
+}
+
+html[data-glassy-quality] ytmusic-search-box #input {
+  color: var(--glassy-text);
+  caret-color: var(--glassy-text);
+}
+
+html[data-glassy-quality] ytmusic-search-box #input::placeholder {
+  color: var(--glassy-text-muted);
+}
+
+/* 2026-08 YTM: opened search — native dropdown (#suggestions, bauhaus
+   #suggestion-list, .search-container). Keep the field in the nav; frost
+   only the panel that hangs below. z-index above #nav-bar-background (3). */
+html[data-glassy-quality] ytmusic-search-box[opened] {
+  overflow: visible;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  z-index: 6;
+  app-region: no-drag;
+}
+
+html[data-glassy-quality] ytmusic-nav-bar:has(ytmusic-search-box[opened]),
+html[data-glassy-quality]
+  ytmusic-nav-bar:has(ytmusic-search-box[opened])
+  .center-content {
+  overflow: visible;
+  z-index: 5;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] .search-container,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  .search-container.ytmusic-search-box {
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality] ytmusic-search-box[opened] #suggestion-list {
+  background:
+    linear-gradient(var(--glassy-search-scrim), var(--glassy-search-scrim)),
+    var(--glassy-search-panel) !important;
+  border: var(--glassy-border);
+  border-radius: var(--glassy-radius-lg);
+  box-shadow: var(--glassy-shadow), var(--glassy-highlight);
+  isolation: isolate;
+  margin-top: 6px;
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestion-list {
+  backdrop-filter: blur(var(--glassy-search-blur))
+    saturate(var(--glassy-saturate));
+  -webkit-backdrop-filter: blur(var(--glassy-search-blur))
+    saturate(var(--glassy-saturate));
+}
+
+/* Nested wrappers share one frost. Inner sections stay clear so rows
+   sit on the panel, not a stack of cards. */
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  #suggestions
+  #suggestion-list,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  #suggestion-list
+  #suggestions,
+html[data-glassy-quality] ytmusic-search-suggestions-section {
+  background: transparent !important;
+  border: none;
+  box-shadow: none;
+  margin-top: 0;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-search-box[is-bauhaus-sidenav-enabled]
+  #suggestion-list {
+  padding: 8px 0 !important;
+  border-top: none;
+}
+
+html[data-glassy-quality] ytmusic-search-box[opened] ytmusic-search-suggestion,
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  ytmusic-responsive-list-item-renderer {
+  background: transparent !important;
+  color: var(--glassy-text);
+  text-shadow: var(--glassy-text-shadow);
+}
+
+@keyframes glassy-search-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-glassy-quality]
+  ytmusic-search-box[opened]
+  :is(#suggestions, #suggestion-list) {
+  animation: glassy-search-drop 180ms var(--glassy-appear) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-glassy-quality]
+    ytmusic-search-box[opened]
+    :is(#suggestions, #suggestion-list) {
+    animation: none;
+  }
+}
+
+/* 2026-08 YTM: #search-page sticky tabs. */
+html[data-glassy-quality] #search-page #tabs.stuck {
+  background: var(--glassy-tint-album);
+  border-bottom: var(--glassy-border);
+}
+
+html[data-glassy-quality='high'] #search-page #tabs.stuck {
+  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate));
+  -webkit-backdrop-filter: blur(var(--glassy-blur))
+    saturate(var(--glassy-saturate));
+}
+
+/* 2026-08 YTM: #guide-wrapper / #mini-guide-background — same punch as the
+   nav: YTM (and bauhaus) paint an opaque column with a right hairline.
+   Entries keep hover; the column itself sits on the backdrop.
+   !important: YTM stylesheet/inline background and border-right. */
+html[data-glassy-quality] #guide-wrapper,
+html[data-glassy-quality] #mini-guide-background {
+  background: transparent !important;
+  border: none !important;
+  border-right: none !important;
+  box-shadow: none;
+}
+
+html[data-glassy-quality='high'] #guide-wrapper,
+html[data-glassy-quality='high'] #mini-guide-background {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality] ytmusic-guide-renderer,
+html[data-glassy-quality] ytmusic-guide-renderer[is-collapsed],
+html[data-glassy-quality] ytmusic-guide-section-renderer,
+html[data-glassy-quality] #guide-content,
+html[data-glassy-quality] #items.ytmusic-guide-section-renderer,
+html[data-glassy-quality] tp-yt-app-drawer,
+html[data-glassy-quality] tp-yt-app-drawer #contentContainer {
+  background: transparent !important;
+  border-right: none !important;
+}
+
+html[data-glassy-quality] #divider.ytmusic-guide-section-renderer,
+html[data-glassy-quality] ytmusic-guide-renderer #divider {
+  display: none !important;
+}
+
+html[data-glassy-quality] ytmusic-guide-signin-promo-renderer,
+html[data-glassy-quality] ytmusic-guide-signin-promo-renderer[is-collapsed] {
+  border: none !important;
+  border-top: none !important;
+}
+
+/* 2026-08 YTM: menus / dialogs — tp-yt-paper-* and ytmusic-menu-popup-renderer.
+   !important: paper custom properties and YTM fill the popup opaque. */
+html[data-glassy-quality] ytmusic-menu-popup-renderer,
+html[data-glassy-quality] tp-yt-paper-listbox,
+html[data-glassy-quality] tp-yt-paper-dialog {
+  --paper-dialog-background-color: transparent;
+  --paper-listbox-background-color: transparent;
+  background: var(--glassy-tint-album) !important;
+  border: var(--glassy-border);
+  border-radius: var(--glassy-radius-lg);
+  box-shadow: var(--glassy-shadow), var(--glassy-highlight);
+}
+
+html[data-glassy-quality='high'] ytmusic-menu-popup-renderer,
+html[data-glassy-quality='high'] tp-yt-paper-listbox,
+html[data-glassy-quality='high'] tp-yt-paper-dialog {
+  backdrop-filter: blur(var(--glassy-blur)) saturate(var(--glassy-saturate)) !important;
+  -webkit-backdrop-filter: blur(var(--glassy-blur))
+    saturate(var(--glassy-saturate)) !important;
+}
+
+html[data-glassy-quality] tp-yt-iron-dropdown {
+  app-region: no-drag;
+}
+
+/* 2026-08 YTM: list-row hover — white veil over tint, no per-row blur.
+   Cards (ytmusic-two-row-item-renderer) get hover tint only: frosting the
+   browse canvas is out of scope, glass stays on the chrome. */
+html[data-glassy-quality]
+  :is(
+    ytmusic-player-queue-item,
+    ytmusic-playlist-panel-video-renderer,
+    ytmusic-responsive-list-item-renderer,
+    ytmusic-guide-entry-renderer tp-yt-paper-item,
+    ytmusic-two-row-item-renderer,
+    ytmusic-search-suggestion,
+    ytmusic-menu-navigation-item-renderer,
+    ytmusic-toggle-menu-service-item-renderer
+  ):hover {
+  background:
+    linear-gradient(var(--glassy-hover), var(--glassy-hover)),
+    rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.25);
+}
+
+/* Remove solid background on paper items pseudo-elements */
+html[data-glassy-quality] tp-yt-paper-item::before,
+html[data-glassy-quality] tp-yt-paper-item::after {
+  background: transparent !important;
+}
+
+/* Focus: keep a visible ring on glassy chrome. Do not replace YTM's own
+   :focus-visible on the browse canvas. */
+html[data-glassy-quality]
+  :is(
+    ytmusic-search-box,
+    ytmusic-guide-entry-renderer,
+    tp-yt-paper-item,
+    ytmusic-menu-navigation-item-renderer,
+    ytmusic-player-bar tp-yt-paper-icon-button,
+    ytmusic-player-bar .play-pause-button,
+    #side-panel.ytmusic-player-page tp-yt-paper-tab,
+    ytmusic-chip-cloud-chip-renderer,
+    .lyrics-picker mdui-button-icon,
+    .lyrics-picker button
+  ):focus-visible {
+  outline: 2px solid rgba(244, 246, 251, 0.75);
+  outline-offset: 2px;
+}
+
+/* Home reuses this same #player as a bottom-right thumbnail. Leave YTM's
+   MINIPLAYER size/position alone and do not clip it. */
+html[data-glassy-quality]
+  ytmusic-player-page:is(
+    [player-ui-state='MINIPLAYER'],
+    [player-ui-state_='MINIPLAYER']
+  ) {
+  overflow: visible !important;
+}
+
+/* Song-page / fullscreen cover square. Do not apply in MINIPLAYER: YTM
+   reuses #player as the bottom-right home thumbnail and owns its size and
+   position. `position: relative` + `--glassy-art` pulled that thumbnail
+   into the closed player-page. Polymer also reflects player-ui-state_.
+
+   #main-panel owns the square size (set per-mode below). #player fills it.
+   min-width: 0 is what lets the column shrink when the guide opens;
+   aspect-ratio keeps the cover a square instead of a rectangle. */
+html[data-glassy-quality]
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN'],
+    [player-ui-state='FULLSCREEN'],
+    [player-ui-state_='FULLSCREEN']
+  ) {
+  & #main-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    background: transparent !important;
+  }
+
+  /* #player IS <ytmusic-player id="player" class="style-scope ytmusic-player-page">. */
+  & #player.ytmusic-player-page,
+  & #av-id ~ #player.ytmusic-player-page {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* YTM paints its own hover scrim / shadow inside #player, and those overlays
+     are square: their corners poke out past the rounded cover. */
+  & #player.ytmusic-player-page *,
+  & #player.ytmusic-player-page *::before,
+  & #player.ytmusic-player-page *::after {
+    border-radius: inherit !important;
+  }
+
+  /* No `display` here: YTM and video-toggle flip #song-image / #song-video
+     with an inline display, and !important on display would show the cover
+     on top of a playing video. */
+  & #song-image {
+    position: relative !important;
+    inset: auto !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: auto !important;
+    padding: 0 !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    box-shadow: var(--glassy-artwork-shadow) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  & #song-image :is(yt-img-shadow, #thumbnail) {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  & #song-image :is(img, #img) {
+    position: relative !important;
+    inset: auto !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  & #song-video {
+    box-shadow: var(--glassy-artwork-shadow) !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Song page (not fullscreen): two-column stage that tracks the space left
+   by the guide / nav / player bar. The unnamed wrapper is the flex row AND
+   the size container, so --glassy-art on its children uses cqw/cqh of the
+   stage rather than the viewport. */
+html[data-glassy-quality]
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  ) {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+
+  /* Flex row is the element that holds BOTH columns. `:has(> #main-panel)`
+     alone can match a left-only wrapper and center the cover inside it,
+     which glued the art to the side-panel. */
+  &:has(> #main-panel):has(> #side-panel),
+  & :has(> #main-panel):has(> #side-panel) {
+    container-type: size;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    /* flex-start + guide inset: space-between pinned the cover to the
+       mini-guide; center dumped leftover on both sides and ate the gutter. */
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 20px 40px 20px calc(80px + 32px) !important;
+    gap: clamp(56px, 5.5vw, 112px) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  /* cqw/cqh resolve against the nearest ancestor container (the row). */
+  &:has(> #main-panel):has(> #side-panel) > *,
+  & :has(> #main-panel):has(> #side-panel) > * {
+    --glassy-art: min(40cqw, 78cqh, 640px);
+  }
+
+  & #main-panel.ytmusic-player-page {
+    box-sizing: border-box !important;
+    flex: 0 1 auto !important;
+    align-self: center !important;
+    width: var(--glassy-art) !important;
+    height: var(--glassy-art) !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+}
+
+/* Expanded YTM guide overlays the player-page; keep the cover off it. */
+html[data-glassy-quality]:has(tp-yt-app-drawer[opened])
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  ):has(> #main-panel):has(> #side-panel),
+html[data-glassy-quality]:has(tp-yt-app-drawer[opened])
+  ytmusic-player-page:is(
+    [player-ui-state='PLAYER_PAGE_OPEN'],
+    [player-ui-state_='PLAYER_PAGE_OPEN']
+  )
+  :has(> #main-panel):has(> #side-panel) {
+  padding-inline-start: calc(240px + 28px) !important;
+}
+
+/* 2026-08 YTM: fullscreen now-playing layout (phase 8) — cover left, lyrics
+   right. Verified against the live DOM in fullscreen:
+
+     ytmusic-player-page#player-page[player-ui-state=FULLSCREEN]
+       └ div                      <- unnamed wrapper, the real flex row
+           ├ div#main-panel  └ ytmusic-player#player > #song-image > …
+           └ div#side-panel
+
+   The wrapper is why an earlier pass failed: the row was declared on the page,
+   which only has that one child, so #main-panel kept sizing itself from the
+   <img> intrinsic width (272px against a 960px column) and the cover came out
+   as a tall rectangle. Sizing lives in --glassy-art on the wrapper's children
+   (cqw/cqh of the stage). */
+html[data-glassy-quality]:has(
+    ytmusic-player-page[player-ui-state='FULLSCREEN'],
+    ytmusic-app-layout[player-ui-state='FULLSCREEN'],
+    ytmusic-player[player-ui-state='FULLSCREEN']
+  ) {
+  --glassy-art: var(--glassy-art-fullscreen);
+
+  & ytmusic-player-page {
+    display: flex !important;
+    box-sizing: border-box !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  & ytmusic-player-page:has(> #main-panel):has(> #side-panel),
+  & ytmusic-player-page :has(> #main-panel):has(> #side-panel) {
+    container-type: size;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 32px 56px !important;
+    gap: clamp(72px, 6.5vw, 140px) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  & ytmusic-player-page:has(> #main-panel):has(> #side-panel) > *,
+  & ytmusic-player-page :has(> #main-panel):has(> #side-panel) > * {
+    --glassy-art: min(42cqw, calc(100cqh - 96px), 880px);
+  }
+
+  /* No lyrics: collapse already sets the column width to 0; centre a larger
+     cover in the leftover stage instead of leaving it parked on the left. */
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    ):has(> #main-panel):has(> #side-panel),
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    )
+    :has(> #main-panel):has(> #side-panel) {
+    justify-content: center !important;
+  }
+
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    ):has(> #main-panel):has(> #side-panel)
+    > *,
+  &
+    ytmusic-player-page:not(
+      :has(
+        #tab-renderer[page-type='MUSIC_PAGE_TYPE_TRACK_LYRICS'],
+        #synced-lyrics-container,
+        .lyric-container,
+        .lyrics-renderer
+      )
+    )
+    :has(> #main-panel):has(> #side-panel)
+    > * {
+    --glassy-art: min(72cqw, calc(100cqh - 96px), 920px);
+  }
+
+  /* Left column is the square — shrinkable, never stretched by the <img>. */
+  & #main-panel.ytmusic-player-page {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    flex: 0 1 auto !important;
+    width: var(--glassy-art) !important;
+    height: var(--glassy-art) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: min(var(--glassy-art), 100%) !important;
+    max-height: min(var(--glassy-art), 100%) !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    transform: translateY(var(--glassy-art-fullscreen-shift)) !important;
+  }
+
+  /* Music videos are 16:9: contain them in the square so nothing is cut. */
+  & #song-video.ytmusic-player {
+    position: relative !important;
+    inset: auto !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: auto !important;
+    border-radius: var(--glassy-radius-lg) !important;
+    overflow: hidden !important;
+    background: transparent !important;
+  }
+
+  & #song-video :is(#movie_player, .html5-video-container, video) {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    top: auto !important;
+    left: auto !important;
+    object-fit: contain !important;
+    background: transparent !important;
+  }
+}
+
+/* Text shadow protection for readability over dynamic album backgrounds */
+html[data-glassy-quality]
+  :is(
+    ytmusic-player-bar .title,
+    ytmusic-player-bar #song-title,
+    ytmusic-player-queue-item .song-title,
+    ytmusic-playlist-panel-video-renderer .title,
+    ytmusic-responsive-list-item-renderer .title,
+    .title.ytmusic-detail-header-renderer,
+    .title.ytmusic-responsive-header-renderer,
+    ytmusic-header-renderer h2,
+    ytmusic-responsive-header-renderer h2
+  ) {
+  text-shadow: var(--glassy-text-shadow);
+}
+
+/* Subtle dark scrim on browse page so tracks remain crisp against light covers */
+html[data-glassy-quality] #browse-page {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.32) 100%
+  ) !important;
+}
+
+/* 2026-08 YTM: transport in ytmusic-player-bar. Restyle hit targets;
+   do not replace the custom element (Pear IPC clicks these nodes). */
+html[data-glassy-quality] ytmusic-player-bar .left-controls {
+  align-items: center;
+  gap: 6px;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button) {
+  width: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  margin: 0 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  --iron-icon-height: 26px;
+  --iron-icon-width: 26px;
+  --iron-icon-fill-color: var(--glassy-text);
+  box-sizing: border-box !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button)
+  :is(button, #button, tp-yt-paper-icon-button) {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button)
+  iron-icon {
+  margin: auto !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(#play-pause-button, .play-pause-button):hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button) {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  --iron-icon-height: 22px;
+  --iron-icon-width: 22px;
+  --iron-icon-fill-color: var(--glassy-text);
+  box-sizing: border-box !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button)
+  :is(button, #button, tp-yt-paper-icon-button) {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button)
+  iron-icon {
+  margin: auto !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.previous-button, .next-button):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-glassy-quality]
+  ytmusic-player-bar
+  :is(.repeat, .shuffle, .like, tp-yt-paper-icon-button.repeat, .volume) {
+  --iron-icon-fill-color: var(--glassy-text-muted);
+}
+
+html[data-glassy-quality] #progress-bar.ytmusic-player-bar {
+  --paper-slider-height: 3px;
+}
+
+html[data-glassy-quality] ytmusic-player-bar .time-info {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel). */
+html[data-glassy-quality='low']
+  :is(
+    #player-bar-background,
+    ytmusic-search-box[opened] #suggestions,
+    ytmusic-search-box[opened] #suggestion-list,
+    #search-page #tabs.stuck,
+    ytmusic-menu-popup-renderer,
+    tp-yt-paper-listbox,
+    tp-yt-paper-dialog
+  ) {
+  background: var(--glassy-tint-low) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality='low'] ytmusic-search-box[opened] #suggestions,
+html[data-glassy-quality='low'] ytmusic-search-box[opened] #suggestion-list {
+  background: var(--glassy-search-panel) !important;
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  html[data-glassy-quality='high']
+    :is(
+      #player-bar-background,
+      ytmusic-search-box[opened] #suggestions,
+      ytmusic-search-box[opened] #suggestion-list,
+      #search-page #tabs.stuck,
+      ytmusic-menu-popup-renderer,
+      tp-yt-paper-listbox,
+      tp-yt-paper-dialog
+    ) {
+    background: var(--glassy-tint-low) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestions,
+  html[data-glassy-quality='high'] ytmusic-search-box[opened] #suggestion-list {
+    background: var(--glassy-search-panel) !important;
+  }
+}

@@ -1,3 +1,5 @@
+import { createSignal, Show } from 'solid-js';
+
 import { t } from '@/i18n';
 import { getSongInfo } from '@/providers/song-info-front';
 
@@ -7,41 +9,34 @@ interface ErrorDisplayProps {
   error: Error;
 }
 
-// prettier-ignore
+// Providers fail for boring reasons (offline, rate limited proxy, YTM shell
+// not ready). Lead with what the user can do about it and keep the stack
+// behind a disclosure so it stays reportable without being the headline.
 export const ErrorDisplay = (props: ErrorDisplayProps) => {
+  const [showDetails, setShowDetails] = createSignal(false);
+
+  const isOffline = () => !navigator.onLine;
+
+  const message = () =>
+    isOffline()
+      ? t('plugins.synced-lyrics.errors.offline')
+      : t('plugins.synced-lyrics.errors.provider-failed', {
+          provider: lyricsStore.provider,
+        });
+
+  const details = () => props.error?.stack || props.error?.message || '';
+
   return (
-    <div style={{ 'margin-bottom': '5%' }}>
-      <pre
-        style={{
-          'background-color': 'var(--ytmusic-color-black1)',
-          'border-radius': '8px',
-          'color': '#58f000',
-          'max-width': '100%',
-          'margin-top': '1em',
-          'margin-bottom': '0',
-          'padding': '0.5em',
-          'font-family': 'serif',
-          'font-size': 'large',
-        }}
-      >
-        {t('plugins.synced-lyrics.errors.fetch')}
-      </pre>
-      <pre
-        style={{
-          'background-color': 'var(--ytmusic-color-black1)',
-          'border-radius': '8px',
-          'color': '#f0a500',
-          'white-space': 'pre',
-          'overflow-x': 'auto',
-          'max-width': '100%',
-          'margin-top': '0.5em',
-          'padding': '0.5em',
-          'font-family': 'monospace',
-          'font-size': 'large',
-        }}
-      >
-        {props.error.stack}
-      </pre>
+    <div class="lyrics-error">
+      <div class="lyrics-error-kaomoji">
+        {isOffline() ? '(×_×)' : '(・_・;)'}
+      </div>
+
+      <div class="lyrics-error-title">
+        {t('plugins.synced-lyrics.errors.title')}
+      </div>
+
+      <div class="lyrics-error-message">{message()}</div>
 
       <yt-button-renderer
         data={{
@@ -53,11 +48,21 @@ export const ErrorDisplay = (props: ErrorDisplayProps) => {
           },
         }}
         onClick={() => retrySearch(lyricsStore.provider, getSongInfo())}
-        style={{
-          'margin-top': '1em',
-          'width': '100%',
-        }}
       />
+
+      <Show when={details()}>
+        <button
+          class="lyrics-error-toggle"
+          onClick={() => setShowDetails((shown) => !shown)}
+          type="button"
+        >
+          {t('plugins.synced-lyrics.errors.details')}
+        </button>
+
+        <Show when={showDetails()}>
+          <pre class="lyrics-error-details">{details()}</pre>
+        </Show>
+      </Show>
     </div>
   );
 };

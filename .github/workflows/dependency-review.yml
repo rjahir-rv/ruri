@@ -1,18 +1,20 @@
 # Dependency Review Action
 #
-# This Action will scan dependency manifest files that change as part of a Pull Reqest, surfacing known-vulnerable versions of the packages declared or updated in the PR. Once installed, if the workflow run is marked as required, PRs introducing known-vulnerable packages will be blocked from merging.
+# Needs Settings → Code security → Dependency graph. Until that is on, the
+# action fails every PR with "Dependency review is not supported on this
+# repository." Run it by hand after enabling the graph, then restore
+# `on: pull_request` if you want it as a required check.
 #
-# Source repository: https://github.com/actions/dependency-review-action
-# Public documentation: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review#dependency-review-enforcement
+# Source: https://github.com/actions/dependency-review-action
 name: "Dependency Review"
-on: [ pull_request ]
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   dependency-review:
-    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Repository"

@@ -78,8 +78,18 @@
         "title": "Update Available"
       }
     },
+    "about": {
+      "close": "Close",
+      "description": "A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.",
+      "disclaimer": "Not affiliated with Google or YouTube.",
+      "github": "GitHub",
+      "license": "MIT License",
+      "title": "About Ruri",
+      "version": "v{{version}}"
+    },
     "menu": {
       "about": "About",
+      "about-app": "About {{appName}}",
       "navigation": {
         "label": "Navigation",
         "submenu": {
@@ -98,6 +108,7 @@
             "submenu": {
               "auto-reset-app-cache": "Reset app cache when app starts",
               "disable-hardware-acceleration": "Disable hardware acceleration",
+              "disable-min-size": "Disable minimum window size",
               "edit-config-json": "Edit config.json",
               "override-user-agent": "Override User-Agent",
               "restart-on-config-changes": "Restart on config changes",
@@ -185,9 +196,22 @@
         }
       },
       "plugins": {
+        "close": "Close",
+        "empty": "No plugins match",
         "enabled": "Enabled",
         "label": "Plugins",
-        "new": "NEW"
+        "locked": "Required for the menu bar",
+        "new": "NEW",
+        "restart-needed": "Restart required",
+        "search": "Search plugins",
+        "sections": {
+          "all": "All",
+          "appearance": "Look",
+          "apps": "Apps",
+          "lyrics": "Lyrics",
+          "playback": "Playback",
+          "system": "System"
+        }
       },
       "view": {
         "label": "View",
@@ -232,7 +256,8 @@
             "percent": "{{ratio}}%"
           }
         },
-        "enable-seekbar": "Enable seekbar theming"
+        "enable-seekbar": "Enable seekbar theming",
+        "paint-page-background": "Paint page background"
       },
       "name": "Album Color Theme"
     },
@@ -498,7 +523,7 @@
       }
     },
     "do-not-track": {
-      "description": "Block all tracking out of the box",
+      "description": "Strip in-player ads and optional tracker lists. Default is in-player only.",
       "menu": {
         "blocker": "Blocker"
       },
@@ -592,6 +617,26 @@
     "exponential-volume": {
       "description": "Makes the volume slider exponential so it's easier to select lower volumes.",
       "name": "Exponential Volume"
+    },
+    "glassy-backdrop": {
+      "description": "Blurred album artwork behind the UI. Aqua motion runs on the song page only. Turn off Transparent Player while this is on.",
+      "menu": {
+        "aqua": "Aqua motion (song page)"
+      },
+      "name": "Glassy Backdrop"
+    },
+    "glassy-theme": {
+      "description": "Frosted-glass chrome for navigation, search, menus, and the player bar. Do not enable together with Blur Navigation Bar (double blur).",
+      "menu": {
+        "fullscreen-lyrics": "Show lyrics automatically in fullscreen",
+        "quality": {
+          "high": "High (blur)",
+          "label": "Quality",
+          "low": "Low (solid tint)",
+          "low-forced": "Low (hardware acceleration off)"
+        }
+      },
+      "name": "Glassy Theme"
     },
     "in-app-menu": {
       "description": "Gives menu-bars a fancy, dark or album-color look",
@@ -838,8 +883,12 @@
     "synced-lyrics": {
       "description": "Provides synced lyrics to songs, using providers like LRClib.",
       "errors": {
+        "details": "Technical details",
         "fetch": "⚠️\tAn error occurred while fetching the lyrics.\n\tPlease try again later.",
-        "not-found": "⚠️ No lyrics found for this song."
+        "not-found": "No lyrics found for this song.",
+        "offline": "You appear to be offline. Check your connection and try again.",
+        "provider-failed": "{{provider}} didn't respond. Try again, or use the arrows above to switch provider.",
+        "title": "Couldn't load the lyrics"
       },
       "menu": {
         "preferred-provider": {
@@ -887,6 +936,10 @@
         "show-lyrics-even-if-inexact": {
           "label": "Show lyrics even if inexact",
           "tooltip": "If the song is not found, the plugin tries again with a different search query.\nThe result from the second attempt may not be exact."
+        },
+        "debug": {
+          "label": "Log lyrics fetch details",
+          "tooltip": "Write lyrics fetch and provider-selection events to the developer console"
         },
         "show-time-codes": {
           "label": "Show time codes",

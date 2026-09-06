@@ -1,8 +1,10 @@
 import { type Menu, type MenuItem } from 'electron';
 import {
   createEffect,
+  createMemo,
   createResource,
   createSignal,
+  ErrorBoundary,
   Index,
   Match,
   onCleanup,
@@ -11,15 +13,25 @@ import {
   Switch,
 } from 'solid-js';
 import { css } from 'solid-styled-components';
-import { TransitionGroup } from 'solid-transition-group';
 
+import { t } from '@/i18n';
 import { cacheNoArgs } from '@/providers/decorators';
 
+import { AboutModal } from './AboutModal';
 import { IconButton } from './IconButton';
 import { MenuButton } from './MenuButton';
 import { Panel } from './Panel';
-import { PanelItem } from './PanelItem';
+import { PanelRenderer } from './PanelRenderer';
+import { PluginGallery } from './PluginGallery';
 import { WindowController } from './WindowController';
+
+import {
+  ABOUT_MENU_ID,
+  MENU_BAR_ICONS,
+  PLUGINS_MENU_ID,
+} from '../gallery/catalog';
+import { PhIcon, type PhIconName } from '../gallery/icons';
+import { submenuItemsOf } from '../gallery/parse';
 
 import type { InAppMenuConfig } from '../constants';
 import type { RendererContext } from '@/types/contexts';
@@ -31,7 +43,7 @@ const titleStyle = cacheNoArgs(
 
     position: fixed;
     top: 0;
-    z-index: 10000000;
+    z-index: 10000010;
 
     width: 100%;
     height: var(--menu-bar-height, 32px);
@@ -42,141 +54,70 @@ const titleStyle = cacheNoArgs(
     align-items: center;
     gap: 4px;
 
-    color: #f1f1f1;
+    color: var(--glassy-text, #f4f6fb);
     font-size: 12px;
-    padding: 4px 4px 4px var(--offset-left, 4px);
-    background-color: var(--titlebar-background-color, #030303);
+    padding: 3px 4px 3px var(--offset-left, 4px);
+    background-color: var(
+      --titlebar-background-color,
+      rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.75)
+    );
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(var(--glassy-blur, 18px))
+      saturate(var(--glassy-saturate, 140%));
+    -webkit-backdrop-filter: blur(var(--glassy-blur, 18px))
+      saturate(var(--glassy-saturate, 140%));
     user-select: none;
 
     transition:
       opacity 200ms ease 0s,
-      transform 300ms cubic-bezier(0.2, 0, 0.6, 1) 0s,
-      background-color 300ms cubic-bezier(0.2, 0, 0.6, 1) 0s;
+      transform 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) 0s,
+      background-color 300ms var(--glassy-ease, cubic-bezier(0.2, 0, 0.6, 1)) 0s;
 
     &[data-macos='true'] {
-      padding: 4px 4px 4px 74px;
+      padding: 3px 4px 3px 74px;
     }
 
     ytmusic-app:has(ytmusic-player[player-ui-state='FULLSCREEN'])
       ~ &:not([data-show='true']) {
       transform: translateY(calc(-1 * var(--menu-bar-height, 32px)));
     }
+
+    html[data-glassy-quality='low'] & {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background-color: var(
+        --titlebar-background-color,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.92)
+      );
+    }
+
+    @supports not (
+      (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+    ) {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background-color: var(
+        --titlebar-background-color,
+        rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.92)
+      );
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none !important;
+    }
   `,
 );
 
-const separatorStyle = cacheNoArgs(
+const menuRowStyle = cacheNoArgs(
   () => css`
-    min-height: 1px;
-    height: 1px;
-    margin: 4px 0;
-
-    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    align-self: stretch;
+    gap: 4px;
+    min-width: 0;
   `,
 );
-
-const animationStyle = cacheNoArgs(() => ({
-  enter: css`
-    opacity: 0;
-    transform: translateX(-50%) scale(0.8);
-  `,
-  enterActive: css`
-    transition:
-      opacity 0.1s cubic-bezier(0.33, 1, 0.68, 1),
-      transform 0.1s cubic-bezier(0.33, 1, 0.68, 1);
-  `,
-  exitTo: css`
-    opacity: 0;
-    transform: translateX(-50%) scale(0.8);
-  `,
-  exitActive: css`
-    transition:
-      opacity 0.1s cubic-bezier(0.32, 0, 0.67, 0),
-      transform 0.1s cubic-bezier(0.32, 0, 0.67, 0);
-  `,
-  move: css`
-    transition: all 0.1s cubic-bezier(0.65, 0, 0.35, 1);
-  `,
-  fakeTarget: css`
-    position: absolute;
-    opacity: 0;
-  `,
-  fake: css`
-    transition: all 0.00000000001s;
-  `,
-}));
-
-export type PanelRendererProps = {
-  items: Electron.Menu['items'];
-  level?: number[];
-  onClick?: (commandId: number, radioGroup?: MenuItem[]) => void;
-};
-const PanelRenderer = (props: PanelRendererProps) => {
-  const radioGroup = () => props.items.filter((it) => it.type === 'radio');
-
-  return (
-    <Index each={props.items}>
-      {(subItem) => (
-        <Show when={subItem().visible}>
-          <Switch>
-            <Match when={subItem().type === 'normal'}>
-              <PanelItem
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                name={subItem().label}
-                onClick={() => props.onClick?.(subItem().commandId)}
-                toolTip={subItem().toolTip}
-                type={'normal'}
-              />
-            </Match>
-            <Match when={subItem().type === 'submenu'}>
-              <PanelItem
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                level={[...(props.level ?? []), subItem().commandId]}
-                name={subItem().label}
-                toolTip={subItem().toolTip}
-                type={'submenu'}
-              >
-                <PanelRenderer
-                  items={subItem().submenu?.items ?? []}
-                  level={[...(props.level ?? []), subItem().commandId]}
-                  onClick={props.onClick}
-                />
-              </PanelItem>
-            </Match>
-            <Match when={subItem().type === 'checkbox'}>
-              <PanelItem
-                checked={subItem().checked}
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                name={subItem().label}
-                onChange={() => props.onClick?.(subItem().commandId)}
-                toolTip={subItem().toolTip}
-                type={'checkbox'}
-              />
-            </Match>
-            <Match when={subItem().type === 'radio'}>
-              <PanelItem
-                checked={subItem().checked}
-                chip={subItem().sublabel}
-                commandId={subItem().commandId}
-                name={subItem().label}
-                onChange={() =>
-                  props.onClick?.(subItem().commandId, radioGroup())
-                }
-                toolTip={subItem().toolTip}
-                type={'radio'}
-              />
-            </Match>
-            <Match when={subItem().type === 'separator'}>
-              <hr class={separatorStyle()} />
-            </Match>
-          </Switch>
-        </Show>
-      )}
-    </Index>
-  );
-};
 
 export type TitleBarProps = {
   ipc: RendererContext<InAppMenuConfig>['ipc'];
@@ -186,10 +127,35 @@ export type TitleBarProps = {
 };
 export const TitleBar = (props: TitleBarProps) => {
   const [collapsed, setCollapsed] = createSignal(props.initialCollapsed);
-  const [ignoreTransition, setIgnoreTransition] = createSignal(false);
-  const [openTarget, setOpenTarget] = createSignal<HTMLElement | null>(null);
+  const [openMenuId, setOpenMenuId] = createSignal<string | null>(null);
+  const [anchors, setAnchors] = createSignal(new Map<string, HTMLElement>());
   const [menu, setMenu] = createSignal<Menu | null>(null);
   const [mouseY, setMouseY] = createSignal(0);
+
+  const isPluginsMenuItem = (item: MenuItem) =>
+    item.id === PLUGINS_MENU_ID || item.label === t('main.menu.plugins.label');
+
+  const isAboutMenuItem = (item: MenuItem) =>
+    item.id === ABOUT_MENU_ID || item.label === t('main.menu.about');
+
+  const idForMenuItem = (item: MenuItem, index: number) => {
+    if (isPluginsMenuItem(item)) return PLUGINS_MENU_ID;
+    if (isAboutMenuItem(item)) return ABOUT_MENU_ID;
+    return item.id || `menu-${index}`;
+  };
+
+  const openMenuItem = createMemo(() => {
+    const id = openMenuId();
+    if (!id) return undefined;
+    return menu()?.items.find(
+      (item, index) => idForMenuItem(item, index) === id,
+    );
+  });
+
+  const openAnchor = createMemo(() => {
+    const id = openMenuId();
+    return id ? (anchors().get(id) ?? null) : null;
+  });
 
   const [data, { refetch }] = createResource(
     async () => (await props.ipc.invoke('get-menu')) as Promise<Menu | null>,
@@ -224,16 +190,15 @@ export const TitleBar = (props: TitleBarProps) => {
     const stack = [...(newMenu?.items ?? [])];
     let now: MenuItem | undefined = stack.pop();
     while (now) {
-      const index =
-        now?.submenu?.items?.findIndex((it) => it.commandId === commandId) ??
-        -1;
+      const children = submenuItemsOf(now);
+      const index = children.findIndex((it) => it.commandId === commandId);
 
       if (index >= 0) {
-        if (menuItem) now?.submenu?.items?.splice(index, 1, menuItem);
-        else now?.submenu?.items?.splice(index, 1);
+        if (menuItem) children.splice(index, 1, menuItem);
+        else children.splice(index, 1);
       }
-      if (now?.submenu) {
-        stack.push(...now.submenu.items);
+      if (children.length > 0) {
+        stack.push(...children);
       }
 
       now = stack.pop();
@@ -268,20 +233,28 @@ export const TitleBar = (props: TitleBarProps) => {
 
   onMount(() => {
     props.ipc.on('close-all-in-app-menu-panel', async () => {
-      setIgnoreTransition(true);
       setMenu(null);
       await refetch();
       setMenu(data() ?? null);
-      setIgnoreTransition(false);
     });
     props.ipc.on('refresh-in-app-menu', async () => {
-      setIgnoreTransition(true);
       await refetch();
       setMenu(data() ?? null);
-      setIgnoreTransition(false);
     });
     props.ipc.on('toggle-in-app-menu', () => {
-      setCollapsed(!collapsed());
+      setCollapsed((current) => !current);
+    });
+    props.ipc.on('open-plugin-gallery', () => {
+      setCollapsed(false);
+      setOpenMenuId((current) =>
+        current === PLUGINS_MENU_ID ? null : PLUGINS_MENU_ID,
+      );
+    });
+    props.ipc.on('open-about-modal', () => {
+      setCollapsed(false);
+      setOpenMenuId((current) =>
+        current === ABOUT_MENU_ID ? null : ABOUT_MENU_ID,
+      );
     });
 
     props.ipc.on('window-maximize', refetchMaximize);
@@ -293,10 +266,11 @@ export const TitleBar = (props: TitleBarProps) => {
         e.target instanceof HTMLElement &&
         !(
           e.target.closest('nav[data-ytmd-main-panel]') ||
-          e.target.closest('ul[data-ytmd-sub-panel]')
+          e.target.closest('ul[data-ytmd-sub-panel]') ||
+          e.target.closest('[data-ytmd-plugin-gallery]')
         )
       ) {
-        setOpenTarget(null);
+        setOpenMenuId(null);
       }
     });
 
@@ -332,7 +306,10 @@ export const TitleBar = (props: TitleBarProps) => {
       id={'ytmd-title-bar-main-panel'}
     >
       <IconButton
-        onClick={() => setCollapsed(!collapsed())}
+        onClick={() => {
+          setCollapsed((current) => !current);
+          setOpenMenuId(null);
+        }}
         style={{
           'border-top-left-radius': '4px',
         }}
@@ -344,92 +321,95 @@ export const TitleBar = (props: TitleBarProps) => {
           />
         </svg>
       </IconButton>
-      <TransitionGroup
-        enterActiveClass={
-          ignoreTransition()
-            ? animationStyle().fake
-            : animationStyle().enterActive
-        }
-        enterClass={
-          ignoreTransition()
-            ? animationStyle().fakeTarget
-            : animationStyle().enter
-        }
-        exitActiveClass={
-          ignoreTransition()
-            ? animationStyle().fake
-            : animationStyle().exitActive
-        }
-        exitToClass={
-          ignoreTransition()
-            ? animationStyle().fakeTarget
-            : animationStyle().exitTo
-        }
-        onAfterEnter={(element) => {
-          (element as HTMLElement).style.removeProperty('transition-delay');
-        }}
-        onBeforeEnter={(element) => {
-          if (ignoreTransition()) return;
-          const index = Number(element.getAttribute('data-index') ?? 0);
-
-          (element as HTMLElement).style.setProperty(
-            'transition-delay',
-            `${index * 0.025}s`,
-          );
-        }}
-        onBeforeExit={(element) => {
-          if (ignoreTransition()) return;
-          const index = Number(element.getAttribute('data-index') ?? 0);
-          const length = Number(element.getAttribute('data-length') ?? 1);
-
-          (element as HTMLElement).style.setProperty(
-            'transition-delay',
-            `${(length * 0.025) - (index * 0.025)}s`,
-          );
-        }}
-      >
-        <Show when={!collapsed()}>
+      <Show when={!collapsed()}>
+        <div class={menuRowStyle()}>
           <Index each={menu()?.items}>
             {(item, index) => {
-              const [anchor, setAnchor] = createSignal<HTMLElement | null>(
-                null,
-              );
+              const isPlugins = () => isPluginsMenuItem(item());
+              const isAbout = () => isAboutMenuItem(item());
+              const menuId = () => idForMenuItem(item(), index);
+              const menuIcon = () =>
+                MENU_BAR_ICONS[menuId()] as PhIconName | undefined;
 
               const handleClick = () => {
-                if (openTarget() === anchor()) {
-                  setOpenTarget(null);
-                } else {
-                  setOpenTarget(anchor());
-                }
+                setOpenMenuId((current) =>
+                  current === menuId() ? null : menuId(),
+                );
               };
 
               return (
-                <>
-                  <MenuButton
-                    data-index={index}
-                    data-length={data()?.items.length}
-                    onClick={handleClick}
-                    ref={setAnchor}
-                    selected={openTarget() === anchor()}
-                    text={item().label}
-                  />
-                  <Panel
-                    anchor={anchor()}
-                    offset={{ mainAxis: 8 }}
-                    open={openTarget() === anchor()}
-                    placement={'bottom-start'}
-                  >
-                    <PanelRenderer
-                      items={item().submenu?.items ?? []}
-                      onClick={handleItemClick}
-                    />
-                  </Panel>
-                </>
+                <MenuButton
+                  aria-haspopup={isPlugins() || isAbout() ? 'dialog' : 'menu'}
+                  icon={
+                    <Show when={menuIcon()}>
+                      {(name) => <PhIcon name={name()} size={14} />}
+                    </Show>
+                  }
+                  onClick={handleClick}
+                  ref={(el) => {
+                    setAnchors((prev) => {
+                      if (prev.get(menuId()) === el) return prev;
+                      const next = new Map(prev);
+                      if (el) next.set(menuId(), el);
+                      else next.delete(menuId());
+                      return next;
+                    });
+                  }}
+                  selected={openMenuId() === menuId()}
+                  text={item().label}
+                />
               );
             }}
           </Index>
-        </Show>
-      </TransitionGroup>
+        </div>
+      </Show>
+      <Show when={openMenuItem()}>
+        {(item) => (
+          <Switch
+            fallback={
+              <Panel
+                anchor={openAnchor()}
+                offset={{ mainAxis: 8 }}
+                open={true}
+                placement={'bottom-start'}
+              >
+                <PanelRenderer
+                  items={submenuItemsOf(item())}
+                  onClick={handleItemClick}
+                />
+              </Panel>
+            }
+          >
+            <Match when={isPluginsMenuItem(item())}>
+              <ErrorBoundary
+                fallback={(error) => {
+                  console.error('plugin-gallery', error);
+                  queueMicrotask(() => setOpenMenuId(null));
+                  return null;
+                }}
+              >
+                <PluginGallery
+                  items={submenuItemsOf(item())}
+                  onClose={() => setOpenMenuId(null)}
+                  onItemClick={handleItemClick}
+                  open={true}
+                />
+              </ErrorBoundary>
+            </Match>
+            <Match when={isAboutMenuItem(item())}>
+              <ErrorBoundary
+                fallback={(error) => {
+                  console.error('about-modal', error);
+                  queueMicrotask(() => setOpenMenuId(null));
+                  return null;
+                }}
+              >
+                <AboutModal onClose={() => setOpenMenuId(null)} open={true} />
+              </ErrorBoundary>
+            </Match>
+          </Switch>
+        )}
+      </Show>
       <Show when={props.enableController}>
         <div style={{ flex: 1 }} />
         <WindowController

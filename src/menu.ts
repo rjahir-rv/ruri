@@ -16,7 +16,17 @@ import { allPlugins } from 'virtual:plugins';
 import { APPLICATION_NAME, setLanguage, t } from '@/i18n';
 
 import * as config from './config';
+import { getWindowMinSize } from './config/defaults';
 import { getAllMenuTemplate, loadAllMenuPlugins } from './loader/menu';
+import {
+  ABOUT_MENU_ID,
+  getPluginGalleryEntry,
+  NAVIGATION_MENU_ID,
+  OPTIONS_MENU_ID,
+  PLUGIN_SECTION_IDS,
+  PLUGINS_MENU_ID,
+  VIEW_MENU_ID,
+} from './plugins/in-app-menu/gallery/catalog';
 import { restart } from './providers/app-controls';
 import { startingPages } from './providers/extracted-data';
 import promptOptions from './providers/prompt-options';
@@ -31,11 +41,13 @@ const inAppMenuActive = await config.plugins.isEnabled('in-app-menu');
 const pluginEnabledMenu = async (
   plugin: string,
   label = '',
-  description?: string ,
+  description?: string,
   isNew = false,
   hasSubmenu = false,
-  refreshMenu?: (() => void) ,
+  refreshMenu?: () => void,
+  itemId = plugin,
 ): Promise<Electron.MenuItemConstructorOptions> => ({
+  id: itemId,
   label: label || plugin,
   sublabel: isNew ? t('main.menu.plugins.new') : undefined,
   toolTip: description,
@@ -61,8 +73,42 @@ export const refreshMenu = async (win: BrowserWindow) => {
   }
 };
 
-export const mainMenuTemplate = async (
+export const showAboutDialog = async (win?: BrowserWindow) => {
+  const options: Electron.MessageBoxOptions = {
+    type: 'info',
+    title: t('main.about.title'),
+    message: `${APPLICATION_NAME} v${packageJson.version}`,
+    detail: `${t('main.about.description')}\n\n${t('main.about.disclaimer')}\n${t('main.about.license')}`,
+    buttons: [t('main.about.close'), t('main.about.github')],
+    defaultId: 0,
+    cancelId: 0,
+  };
+  const result =
+    win && !win.isDestroyed()
+      ? await dialog.showMessageBox(win, options)
+      : await dialog.showMessageBox(options);
+  if (result.response === 1) {
+    await shell.openExternal('https://github.com/rjahir-rv/ruri');
+  }
+};
+
+const createAboutMenuItem = (
   win: BrowserWindow,
+): Electron.MenuItemConstructorOptions => ({
+  label: t('main.menu.about-app', { appName: APPLICATION_NAME }),
+  async click(_item, focusedWin) {
+    const targetWin = (focusedWin ?? win) as BrowserWindow | undefined;
+    const inAppMenuActive = await config.plugins.isEnabled('in-app-menu');
+    if (inAppMenuActive && targetWin && !targetWin.isDestroyed()) {
+      targetWin.webContents.send('open-about-modal');
+    } else {
+      await showAboutDialog(targetWin);
+    }
+  },
+});
+
+export const mainMenuTemplate = async (
+  win: Electron.BrowserWindow,
 ): Promise<MenuTemplate> => {
   const innerRefreshMenu = () => refreshMenu(win);
   const { navigationHistory } = win.webContents;
@@ -96,6 +142,7 @@ export const mainMenuTemplate = async (
       return [
         id,
         {
+          id,
           label: pluginLabel,
           sublabel: isNew ? t('main.menu.plugins.new') : undefined,
           toolTip: pluginDescription,
@@ -107,6 +154,7 @@ export const mainMenuTemplate = async (
               false,
               true,
               innerRefreshMenu,
+              `${id}::enabled`,
             ),
             { type: 'separator' },
             ...template,
@@ -117,45 +165,68 @@ export const mainMenuTemplate = async (
   );
 
   const availablePlugins = Object.keys(await allPlugins());
-  const pluginMenus = await Promise.all(
-    availablePlugins
-      .sort((a, b) => {
-        const aPluginLabel = allPluginsStubs[a]?.name?.() ?? a;
-        const bPluginLabel = allPluginsStubs[b]?.name?.() ?? b;
+  const pluginItemEntries = await Promise.all(
+    availablePlugins.map(async (id) => {
+      const predefinedTemplate = menuResult.find((it) => it[0] === id);
+      if (predefinedTemplate) return [id, predefinedTemplate[1]] as const;
 
-        return aPluginLabel.localeCompare(bPluginLabel);
-      })
-      .map(async (id) => {
-        const predefinedTemplate = menuResult.find((it) => it[0] === id);
-        if (predefinedTemplate) return predefinedTemplate[1];
+      const plugin = allPluginsStubs[id];
+      const pluginLabel = plugin?.name?.() ?? id;
+      const pluginDescription = plugin?.description?.() ?? undefined;
+      const isNew = plugin?.addedVersion
+        ? satisfies(packageJson.version, plugin.addedVersion)
+        : false;
 
-        const plugin = allPluginsStubs[id];
-        const pluginLabel = plugin?.name?.() ?? id;
-        const pluginDescription = plugin?.description?.() ?? undefined;
-        const isNew = plugin?.addedVersion
-          ? satisfies(packageJson.version, plugin.addedVersion)
-          : false;
-
-        return pluginEnabledMenu(
+      return [
+        id,
+        await pluginEnabledMenu(
           id,
           pluginLabel,
           pluginDescription,
           isNew,
           true,
           innerRefreshMenu,
-        );
-      }),
+        ),
+      ] as const;
+    }),
   );
+  const pluginItemById = new Map(pluginItemEntries);
+
+  const pluginMenus: Electron.MenuItemConstructorOptions[] = [];
+  for (const section of PLUGIN_SECTION_IDS) {
+    const sectionIds = availablePlugins
+      .filter((id) => getPluginGalleryEntry(id).section === section)
+      .sort((a, b) => {
+        const aPluginLabel = allPluginsStubs[a]?.name?.() ?? a;
+        const bPluginLabel = allPluginsStubs[b]?.name?.() ?? b;
+        return aPluginLabel.localeCompare(bPluginLabel);
+      });
+    if (sectionIds.length === 0) continue;
+    if (pluginMenus.length > 0) {
+      pluginMenus.push({ type: 'separator' });
+    }
+    pluginMenus.push({
+      id: `plugins-section-${section}`,
+      label: t(`main.menu.plugins.sections.${section}`),
+      enabled: false,
+    });
+    for (const id of sectionIds) {
+      const item = pluginItemById.get(id);
+      if (item) pluginMenus.push(item);
+    }
+  }
 
   const langResources = await languageResources();
   const availableLanguages = Object.keys(langResources);
 
   return [
     {
+      id: PLUGINS_MENU_ID,
       label: t('main.menu.plugins.label'),
       submenu: pluginMenus,
     },
     {
+      id: OPTIONS_MENU_ID,
       label: t('main.menu.options.label'),
       submenu: [
         {
@@ -553,6 +624,27 @@ export const mainMenuTemplate = async (
             },
             {
               label: t(
+                'main.menu.options.submenu.advanced-options.submenu.disable-min-size',
+              ),
+              type: 'checkbox',
+              checked: config.get('options.disableMinSize'),
+              click(item: MenuItem) {
+                // Applied live first: setMenuOption may restart the app.
+                const { minWidth, minHeight } = getWindowMinSize(item.checked);
+                win.setMinimumSize(minWidth, minHeight);
+                if (!item.checked) {
+                  const [width, height] = win.getSize();
+                  win.setSize(
+                    Math.max(width, minWidth),
+                    Math.max(height, minHeight),
+                  );
+                }
+
+                config.setMenuOption('options.disableMinSize', item.checked);
+              },
+            },
+            {
+              label: t(
                 'main.menu.options.submenu.advanced-options.submenu.restart-on-config-changes',
               ),
               type: 'checkbox',
@@ -575,27 +667,22 @@ export const mainMenuTemplate = async (
               },
             },
             { type: 'separator' },
-            is.macOS()
-              ? {
-                  label: t(
-                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                  ),
-                  // Cannot use "toggleDevTools" role in macOS
-                  click() {
-                    const { webContents } = win;
-                    if (webContents.isDevToolsOpened()) {
-                      webContents.closeDevTools();
-                    } else {
-                      webContents.openDevTools();
-                    }
-                  },
+            {
+              label: t(
+                'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
+              ),
+              // Detached: docked DevTools shrink the YTM viewport and can hide
+              // the nav / player bar after close. The "toggleDevTools" role
+              // also fails on macOS.
+              click() {
+                const { webContents } = win;
+                if (webContents.isDevToolsOpened()) {
+                  webContents.closeDevTools();
+                } else {
+                  webContents.openDevTools({ mode: 'detach' });
                 }
-              : {
-                  label: t(
-                    'main.menu.options.submenu.advanced-options.submenu.toggle-dev-tools',
-                  ),
-                  role: 'toggleDevTools',
-                },
+              },
+            },
             {
               label: t(
                 'main.menu.options.submenu.advanced-options.submenu.edit-config-json',
@@ -609,6 +696,7 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: VIEW_MENU_ID,
       label: t('main.menu.view.label'),
       submenu: [
         {
@@ -654,6 +742,7 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: NAVIGATION_MENU_ID,
       label: t('main.menu.navigation.label'),
       submenu: [
         {
@@ -690,8 +779,9 @@ export const mainMenuTemplate = async (
       ],
     },
     {
+      id: ABOUT_MENU_ID,
       label: t('main.menu.about'),
-      submenu: [{ role: 'about' }],
+      submenu: [createAboutMenuItem(win)],
     },
   ];
 };
@@ -702,7 +792,7 @@ export const setApplicationMenu = async (win: Electron.BrowserWindow) => {
     menuTemplate.unshift({
       label: name,
       submenu: [
-        { role: 'about' },
+        createAboutMenuItem(win),
         { type: 'separator' },
         { role: 'hide' },
         { role: 'hideOthers' },

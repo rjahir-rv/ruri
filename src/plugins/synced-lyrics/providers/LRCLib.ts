@@ -40,7 +40,11 @@ export class LRCLib implements LyricProvider {
     }
 
     if (data.length === 0) {
-      if (!config()?.showLyricsEvenIfInexact) {
+      const pluginConfig = config();
+      if (!pluginConfig) {
+        throw new Error('synced-lyrics config is not ready yet');
+      }
+      if (!pluginConfig.showLyricsEvenIfInexact) {
         return null;
       }
 

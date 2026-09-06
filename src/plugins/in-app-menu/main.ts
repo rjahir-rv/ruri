@@ -4,6 +4,7 @@ import {
   type MenuItem,
   ipcMain,
   nativeImage,
+  shell,
   type WebContents,
 } from 'electron';
 import { register } from 'electron-localshortcut';
@@ -22,6 +23,9 @@ export const onMainLoad = ({
   win.once('ready-to-show', () => {
     register(win, '`', () => {
       send('toggle-in-app-menu');
+    });
+    register(win, 'CmdOrCtrl+Shift+P', () => {
+      send('open-plugin-gallery');
     });
   });
 
@@ -85,5 +89,14 @@ export const onMainLoad = ({
   handle('image-path-to-data-url', (imagePath: string) => {
     const nativeImageIcon = nativeImage.createFromPath(imagePath);
     return nativeImageIcon?.toDataURL();
+  });
+
+  handle('open-external', (url: string) => {
+    if (
+      typeof url === 'string' &&
+      (url.startsWith('https://') || url.startsWith('http://'))
+    ) {
+      shell.openExternal(url);
+    }
   });
 };

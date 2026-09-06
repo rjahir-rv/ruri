@@ -18,7 +18,9 @@ export class LyricsGenius implements LyricProvider {
 
     const response = await fetch(`${this.baseUrl}/api/search/song?${query}`);
     if (!response.ok) {
-      return null;
+      throw new Error(
+        `bad HTTPStatus(${response.status} ${response.statusText})`,
+      );
     }
 
     const data = (await response.json()) as LyricsGeniusSearch;

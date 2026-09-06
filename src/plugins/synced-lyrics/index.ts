@@ -20,12 +20,13 @@ export default createPlugin<
   restartNeeded: true,
   addedVersion: '3.5.X',
   config: {
-    enabled: false,
+    enabled: true,
+    debug: false,
     preciseTiming: true,
     showLyricsEvenIfInexact: true,
     showTimeCodes: false,
     defaultTextString: '♪',
-    lineEffect: 'fancy',
+    lineEffect: 'focus',
     romanization: true,
   },
 

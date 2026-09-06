@@ -46,7 +46,7 @@ export default createPlugin({
   description: () => t('plugins.do-not-track.description'),
   restartNeeded: false,
   config: {
-    enabled: false,
+    enabled: true,
     cache: true,
     blocker: blockers.InPlayer,
     additionalBlockLists: [],
@@ -109,14 +109,22 @@ export default createPlugin({
     // see #1478
     script: `const _prunerFn = window._pruner;
     window._pruner = undefined;
+    const prune = (o) => {
+      try {
+        if (typeof _prunerFn !== 'function') return o;
+        return _prunerFn(o);
+      } catch (e) {
+        return o;
+      }
+    };
     JSON.parse = new Proxy(JSON.parse, {
-      apply() {
-        return _prunerFn(Reflect.apply(...arguments));
+      apply(target, thisArg, args) {
+        return prune(Reflect.apply(target, thisArg, args));
       },
     });
     Response.prototype.json = new Proxy(Response.prototype.json, {
-      apply() {
-        return Reflect.apply(...arguments).then((o) => _prunerFn(o));
+      apply(target, thisArg, args) {
+        return Reflect.apply(target, thisArg, args).then(prune);
       },
     }); 0`,
     async start({ getConfig }) {

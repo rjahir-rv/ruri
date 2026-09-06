@@ -8,6 +8,26 @@ export interface WindowPositionConfig {
   y: number;
 }
 
+export const MIN_WINDOW_WIDTH = 1100;
+export const MIN_WINDOW_HEIGHT = 620;
+
+/* First-launch size. 16:9, above the minimum so the player page (cover +
+   side panel) and README shots have room; GitHub's ~920px embed downscales
+   cleanly from 1600. */
+export const DEFAULT_WINDOW_WIDTH = 1600;
+export const DEFAULT_WINDOW_HEIGHT = 900;
+
+export function getWindowMinSize(disableMinSize: boolean): {
+  minWidth: number;
+  minHeight: number;
+} {
+  if (disableMinSize) {
+    return { minWidth: 0, minHeight: 0 };
+  }
+
+  return { minWidth: MIN_WINDOW_WIDTH, minHeight: MIN_WINDOW_HEIGHT };
+}
+
 export interface DefaultConfig {
   'window-size': WindowSizeConfig;
   'window-maximized': boolean;
@@ -23,6 +43,7 @@ export interface DefaultConfig {
     hideMenuWarned: boolean;
     startAtLogin: boolean;
     disableHardwareAcceleration: boolean;
+    disableMinSize: boolean;
     removeUpgradeButton: boolean;
     restartOnConfigChanges: boolean;
     trayClickPlayPause: boolean;
@@ -42,8 +63,8 @@ export interface DefaultConfig {
 
 export const defaultConfig: DefaultConfig = {
   'window-size': {
-    width: 1100,
-    height: 550,
+    width: DEFAULT_WINDOW_WIDTH,
+    height: DEFAULT_WINDOW_HEIGHT,
   },
   'window-maximized': false,
   'window-position': {
@@ -60,6 +81,7 @@ export const defaultConfig: DefaultConfig = {
     hideMenuWarned: false,
     startAtLogin: false,
     disableHardwareAcceleration: false,
+    disableMinSize: false,
     removeUpgradeButton: false,
     restartOnConfigChanges: false,
     trayClickPlayPause: false,

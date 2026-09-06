@@ -152,12 +152,16 @@ export default createPlugin<
             '#button-shape-like > button[aria-pressed=true]',
           ).length,
         };
+        const maskSize = (size: number) => {
+          const filled = (size / listsLength) * 100;
+          return `100% ${100 - filled}%`;
+        };
         for (const [name, size] of Object.entries(counts)) {
           switch (name) {
             case 'dislike':
               if (size > 0) {
                 setShowDislike(true);
-                setDislikeMaskSize(`100% ${100 - ((size / listsLength) * 100)}%`);
+                setDislikeMaskSize(maskSize(size));
               } else {
                 setShowDislike(false);
               }
@@ -165,9 +169,7 @@ export default createPlugin<
             case 'undislike':
               if (size > 0) {
                 setShowUnDislike(true);
-                setUnDislikeMaskSize(
-                  `100% ${100 - ((size / listsLength) * 100)}%`,
-                );
+                setUnDislikeMaskSize(maskSize(size));
               } else {
                 setShowUnDislike(false);
               }
@@ -175,7 +177,7 @@ export default createPlugin<
             case 'like':
               if (size > 0) {
                 setShowLike(true);
-                setLikeMaskSize(`100% ${100 - ((size / listsLength) * 100)}%`);
+                setLikeMaskSize(maskSize(size));
               } else {
                 setShowLike(false);
               }
@@ -183,7 +185,7 @@ export default createPlugin<
             case 'unlike':
               if (size > 0) {
                 setShowUnLike(true);
-                setUnLikeMaskSize(`100% ${100 - ((size / listsLength) * 100)}%`);
+                setUnLikeMaskSize(maskSize(size));
               } else {
                 setShowUnLike(false);
               }
