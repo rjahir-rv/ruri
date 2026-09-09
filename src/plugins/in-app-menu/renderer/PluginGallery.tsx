@@ -51,6 +51,7 @@ const scrimStyle = cacheNoArgs(
 const sheetStyle = cacheNoArgs(
   () => css`
     position: relative;
+    isolation: isolate;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-columns: minmax(0, 1fr) 0fr;
@@ -65,6 +66,28 @@ const sheetStyle = cacheNoArgs(
     box-shadow:
       var(--glassy-shadow, 0 10px 28px rgba(0, 0, 0, 0.35)),
       var(--glassy-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.14));
+    background: transparent;
+    color: var(--glassy-text, #f4f6fb);
+
+    &[data-detail='true'] {
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    }
+
+    > :not([data-glass-layer]) {
+      position: relative;
+      z-index: 1;
+    }
+  `,
+);
+
+const glassLayerStyle = cacheNoArgs(
+  () => css`
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    transform: translateZ(0);
     background:
       linear-gradient(
         var(--glassy-search-scrim, rgba(8, 8, 12, 0.42)),
@@ -78,11 +101,6 @@ const sheetStyle = cacheNoArgs(
       saturate(var(--glassy-saturate, 140%));
     -webkit-backdrop-filter: blur(var(--glassy-search-blur, 32px))
       saturate(var(--glassy-saturate, 140%));
-    color: var(--glassy-text, #f4f6fb);
-
-    &[data-detail='true'] {
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-    }
 
     html[data-glassy-quality='low'] & {
       backdrop-filter: none;
@@ -309,18 +327,24 @@ export const PluginGallery = (props: PluginGalleryProps) => {
     });
   });
 
-  const grouped = createMemo(() => {
-    const groups: { id: PluginSectionId; plugins: GalleryPlugin[] }[] = [];
-    for (const id of PLUGIN_SECTION_IDS) {
-      const items = filtered().filter((plugin) => plugin.section === id);
-      if (items.length > 0) groups.push({ id, plugins: items });
-    }
-    return groups;
-  });
-
-  const selected = createMemo(
-    () => plugins().find((plugin) => plugin.id === selectedId()) ?? null,
+  const visibleSections = createMemo<PluginSectionId[]>(() =>
+    PLUGIN_SECTION_IDS.filter((id) =>
+      filtered().some((plugin) => plugin.section === id),
+    ),
   );
+
+  const pluginIdsInSection = (sectionId: PluginSectionId) =>
+    filtered()
+      .filter((plugin) => plugin.section === sectionId)
+      .map((plugin) => plugin.id);
+
+  const pluginById = (id: string) =>
+    plugins().find((plugin) => plugin.id === id);
+
+  const selected = createMemo(() => {
+    const id = selectedId();
+    return id ? (pluginById(id) ?? null) : null;
+  });
 
   const sectionLabel = (id: SectionFilter) =>
     t(`main.menu.plugins.sections.${id}`);
@@ -404,10 +428,15 @@ export const PluginGallery = (props: PluginGalleryProps) => {
             aria-label={t('main.menu.plugins.label')}
             aria-modal="true"
             class={sheetStyle()}
-            data-detail={Boolean(selected())}
+            data-detail={Boolean(selectedId())}
             ref={setSheetEl}
             role="dialog"
           >
+            <div
+              aria-hidden="true"
+              class={glassLayerStyle()}
+              data-glass-layer
+            />
             <header class={headerStyle()}>
               <h1 class={titleStyle()}>
                 <PhIcon name="squares-four" size={18} />
@@ -466,24 +495,29 @@ export const PluginGallery = (props: PluginGalleryProps) => {
                     {t('main.menu.plugins.empty')}
                   </div>
                 }
-                when={grouped().length > 0}
+                when={visibleSections().length > 0}
               >
-                <For each={grouped()}>
-                  {(group) => (
+                <For each={visibleSections()}>
+                  {(sectionId) => (
                     <section>
                       <h2 class={sectionTitleStyle()}>
-                        {sectionLabel(group.id)}
+                        {sectionLabel(sectionId)}
                       </h2>
                       <div class={gridStyle()}>
-                        <For each={group.plugins}>
-                          {(plugin) => (
-                            <PluginTile
-                              onOpen={() => setSelectedId(plugin.id)}
-                              onToggle={() => togglePlugin(plugin)}
-                              plugin={plugin}
-                              selected={selectedId() === plugin.id}
-                            />
-                          )}
+                        <For each={pluginIdsInSection(sectionId)}>
+                          {(pluginId) => {
+                            const plugin = createMemo(
+                              () => pluginById(pluginId)!,
+                            );
+                            return (
+                              <PluginTile
+                                onOpen={() => setSelectedId(plugin().id)}
+                                onToggle={() => togglePlugin(plugin())}
+                                plugin={plugin()}
+                                selected={selectedId() === pluginId}
+                              />
+                            );
+                          }}
                         </For>
                       </div>
                     </section>
@@ -491,15 +525,15 @@ export const PluginGallery = (props: PluginGalleryProps) => {
                 </For>
               </Show>
             </div>
-            <Show when={selected()}>
-              {(plugin) => (
-                <PluginDetail
-                  onClick={props.onItemClick}
-                  onClose={() => setSelectedId(null)}
-                  plugin={plugin()}
-                  restartNeeded={RESTART_NEEDED_PLUGIN_IDS.has(plugin().id)}
-                />
-              )}
+            <Show when={Boolean(selected())}>
+              <PluginDetail
+                onClick={props.onItemClick}
+                onClose={() => setSelectedId(null)}
+                plugin={selected()!}
+                restartNeeded={RESTART_NEEDED_PLUGIN_IDS.has(
+                  selectedId() ?? '',
+                )}
+              />
             </Show>
           </div>
         </div>
