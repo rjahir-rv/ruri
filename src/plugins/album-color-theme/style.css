@@ -43,8 +43,10 @@ ytmusic-app-layout
   > [slot='player-page']:not([is-mweb-modernization-enabled]):not(
     :has(ytmusic-player[player-ui-state='FULLSCREEN'])
   ) {
-  padding-top: 90px;
-  margin-top: calc(-90px + var(--menu-bar-height, 0px)) !important;
+  padding-top: var(--ytmusic-nav-bar-height, 90px);
+  margin-top: calc(
+    -1 * var(--ytmusic-nav-bar-height, 90px) + var(--menu-bar-height, 0px)
+  ) !important;
 }
 
 /* 0.5-white chrome belongs to the painted page look. With glass on,

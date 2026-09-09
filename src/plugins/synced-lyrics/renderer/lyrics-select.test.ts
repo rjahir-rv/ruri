@@ -138,6 +138,49 @@ test('prefers YTMusic synced lines when both providers succeeded', () => {
   ).toBe(ProviderNames.YTMusic);
 });
 
+test('stays on preferred YTMusic while it is still fetching', () => {
+  expect(
+    pickBestProvider(
+      bag({
+        [ProviderNames.MusixMatch]: synced(),
+      }),
+      {
+        preferred: ProviderNames.YTMusic,
+        current: ProviderNames.YTMusic,
+      },
+    ),
+  ).toBe(ProviderNames.YTMusic);
+});
+
+test('switches back to preferred YTMusic even if another provider is showing', () => {
+  expect(
+    pickBestProvider(
+      bag({
+        [ProviderNames.MusixMatch]: synced(),
+      }),
+      {
+        preferred: ProviderNames.YTMusic,
+        current: ProviderNames.MusixMatch,
+      },
+    ),
+  ).toBe(ProviderNames.YTMusic);
+});
+
+test('falls back when preferred YTMusic finished empty', () => {
+  expect(
+    pickBestProvider(
+      bag({
+        [ProviderNames.YTMusic]: none(),
+        [ProviderNames.MusixMatch]: synced(),
+      }),
+      {
+        preferred: ProviderNames.YTMusic,
+        current: ProviderNames.YTMusic,
+      },
+    ),
+  ).toBe(ProviderNames.MusixMatch);
+});
+
 test('honors a preferred provider that has usable lyrics', () => {
   expect(
     pickBestProvider(

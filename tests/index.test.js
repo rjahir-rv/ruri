@@ -122,9 +122,59 @@ test('Ruri App - With default settings, app is launched and visible', async () =
       'album-color-theme',
       'synced-lyrics',
       'do-not-track',
+      'blur-nav-bar',
     ].map((id) => window.mainConfig.plugins.isEnabled(id)))`);
   });
-  expect(defaultPlugins).toEqual([true, true, true, true, true]);
+  expect(defaultPlugins).toEqual([true, true, true, true, true, true]);
+
+  const chromeSnapshot = () =>
+    app.evaluate(async ({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (!win) return null;
+      return win.webContents.executeJavaScript(`(async () => {
+        const html = document.documentElement;
+        const nav = document.querySelector('#nav-bar-background');
+        const home = document.querySelector('ytmusic-guide-entry-renderer');
+        const navStyle = nav ? getComputedStyle(nav) : null;
+        const navRect = nav?.getBoundingClientRect();
+        const homeRect = home?.getBoundingClientRect();
+        const overlap =
+          navRect && homeRect ? navRect.bottom - homeRect.top : null;
+        const lyrics = await window.ipcRenderer.invoke(
+          'peard:get-config',
+          'synced-lyrics',
+        );
+        return {
+          dataOs: html.getAttribute('data-os') ?? '',
+          navHeight: getComputedStyle(html)
+            .getPropertyValue('--ytmusic-nav-bar-height')
+            .trim(),
+          navBlurAttr: html.dataset.glassyNavBlur ?? '',
+          navBlur: navStyle?.backdropFilter ?? '',
+          navBg: navStyle?.backgroundColor ?? '',
+          overlap,
+          preferredProvider: lyrics?.preferredProvider ?? null,
+        };
+      })()`);
+    });
+
+  await expect.poll(chromeSnapshot, { timeout: 45_000 }).toEqual(
+    expect.objectContaining({
+      dataOs: 'Linux',
+      navHeight: '90px',
+      navBlurAttr: 'on',
+      preferredProvider: 'YTMusic',
+    }),
+  );
+
+  const chrome = await chromeSnapshot();
+  expect(chrome.navBg).toMatch(/rgba?\(/);
+  if (chrome.navBlur && chrome.navBlur !== 'none') {
+    expect(chrome.navBlur).toContain('blur(');
+  }
+  if (chrome.overlap !== null) {
+    expect(chrome.overlap).toBeLessThanOrEqual(2);
+  }
 
   await app.evaluate(async ({ BrowserWindow }) => {
     const win = BrowserWindow.getAllWindows()[0];

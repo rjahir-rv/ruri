@@ -37,22 +37,32 @@ html[data-glassy-quality]
   }
 }
 
-/* 2026-08 YTM: #nav-bar-background — sibling of ytmusic-nav-bar. YTM paints
-   an opaque strip (and a #nav-bar-divider hairline) that reads as a separate
-   panel over the backdrop. Punch it so logo + search sit on the page wash.
-   Keep opacity 1 so YTM does not hide the node; keep height (in-app-menu math).
-   !important: YTM inline/stylesheet background, border, and opacity win. */
+/* 2026-08 YTM: #nav-bar-background — sibling of ytmusic-nav-bar. Punch by
+   default so logo + search sit on the page wash. Frost only while
+   blur-nav-bar is on (html[data-glassy-nav-blur]); that plugin is the
+   Plugins-menu toggle. Keep opacity 1 so YTM does not hide the node; keep
+   height (in-app-menu math). !important: YTM inline/stylesheet win. */
 html[data-glassy-quality] #nav-bar-background {
   background: transparent !important;
   opacity: 1 !important;
   border: none !important;
   border-bottom: none !important;
   box-shadow: none;
-}
-
-html[data-glassy-quality='high'] #nav-bar-background {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+html[data-glassy-quality][data-glassy-nav-blur] #nav-bar-background {
+  background: var(--glassy-tint-nav) !important;
+  border-bottom: none;
+  /* Dissolve into the wash instead of a hard strip edge. */
+  mask-image: linear-gradient(to bottom, #000 58%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent);
+}
+
+html[data-glassy-quality='high'][data-glassy-nav-blur] #nav-bar-background {
+  backdrop-filter: blur(var(--glassy-nav-blur)) saturate(108%) !important;
+  -webkit-backdrop-filter: blur(var(--glassy-nav-blur)) saturate(108%) !important;
 }
 
 html[data-glassy-quality] ytmusic-nav-bar {
@@ -274,9 +284,8 @@ html[data-glassy-quality='high'] #search-page #tabs.stuck {
     saturate(var(--glassy-saturate));
 }
 
-/* 2026-08 YTM: #guide-wrapper / #mini-guide-background — same punch as the
-   nav: YTM (and bauhaus) paint an opaque column with a right hairline.
-   Entries keep hover; the column itself sits on the backdrop.
+/* 2026-08 YTM: #guide-wrapper / #mini-guide-background — punch the column
+   so entries sit on the backdrop. The nav strip is frosted separately.
    !important: YTM stylesheet/inline background and border-right. */
 html[data-glassy-quality] #guide-wrapper,
 html[data-glassy-quality] #mini-guide-background {
@@ -312,6 +321,16 @@ html[data-glassy-quality] ytmusic-guide-signin-promo-renderer,
 html[data-glassy-quality] ytmusic-guide-signin-promo-renderer[is-collapsed] {
   border: none !important;
   border-top: none !important;
+}
+
+html[data-glassy-quality] ytmusic-guide-entry-renderer {
+  --iron-icon-fill-color: var(--glassy-text-muted);
+  color: var(--glassy-text);
+}
+
+html[data-glassy-quality]
+  ytmusic-guide-entry-renderer:is([active], :hover, :focus-within) {
+  --iron-icon-fill-color: var(--glassy-text);
 }
 
 /* 2026-08 YTM: menus / dialogs — tp-yt-paper-* and ytmusic-menu-popup-renderer.
@@ -875,7 +894,14 @@ html[data-glassy-quality] ytmusic-player-bar .time-info {
   letter-spacing: 0.02em;
 }
 
-/* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel). */
+/* Low quality: solid tint, no backdrop-filter (weak GPU / no HW accel).
+   Nav stays on the wash — album tint, not the heavy 0.82 slab. */
+html[data-glassy-quality='low'][data-glassy-nav-blur] #nav-bar-background {
+  background: var(--glassy-tint-nav) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 html[data-glassy-quality='low']
   :is(
     #player-bar-background,
@@ -899,6 +925,12 @@ html[data-glassy-quality='low'] ytmusic-search-box[opened] #suggestion-list {
 @supports not (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
+  html[data-glassy-quality='high'][data-glassy-nav-blur] #nav-bar-background {
+    background: var(--glassy-tint-nav) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   html[data-glassy-quality='high']
     :is(
       #player-bar-background,

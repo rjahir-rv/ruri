@@ -3,6 +3,7 @@ import { createPlugin } from '@/utils';
 
 import { backend } from './backend';
 import { menu } from './menu';
+import { ProviderNames } from './providers';
 import { renderer } from './renderer';
 import style from './style.css?inline';
 
@@ -22,6 +23,7 @@ export default createPlugin<
   config: {
     enabled: true,
     debug: false,
+    preferredProvider: ProviderNames.YTMusic,
     preciseTiming: true,
     showLyricsEvenIfInexact: true,
     showTimeCodes: false,
