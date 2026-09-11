@@ -13,7 +13,7 @@ A refined desktop canvas for music, with frosted-glass chrome and a plugin galle
 
 | | |
 | --- | --- |
-| Product | Ruri **0.2.0** <!-- x-release-please-version --> |
+| Product | Ruri **0.3.0** <!-- x-release-please-version --> |
 | License | [MIT](license) — see [NOTICE](NOTICE) |
 | App id | `dev.ruri.desktop` |
 | Protocol | `ruri:` |

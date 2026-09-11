@@ -13,7 +13,7 @@ Um desktop para música com cromado de vidro fosco e uma galeria de plugins. Cli
 
 | | |
 | --- | --- |
-| Produto | Ruri **0.2.0** <!-- x-release-please-version --> |
+| Produto | Ruri **0.3.0** <!-- x-release-please-version --> |
 | Licença | [MIT](license) — ver [NOTICE](NOTICE) |
 | Id do app | `dev.ruri.desktop` |
 | Protocolo | `ruri:` |

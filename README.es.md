@@ -13,7 +13,7 @@ Un escritorio para música con cromo de vidrio esmerilado y una galería de plug
 
 | | |
 | --- | --- |
-| Producto | Ruri **0.2.0** <!-- x-release-please-version --> |
+| Producto | Ruri **0.3.0** <!-- x-release-please-version --> |
 | Licencia | [MIT](license) — ver [NOTICE](NOTICE) |
 | Id de la app | `dev.ruri.desktop` |
 | Protocolo | `ruri:` |
