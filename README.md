@@ -3,6 +3,8 @@
   Ruri
 </h1>
 
+**English** · [Español](README.es.md) · [Português](README.pt.md)
+
 A refined desktop canvas for music, with frosted-glass chrome and a plugin gallery. An independent open-source client for YouTube Music, built on [Pear Desktop](https://github.com/pear-devs/pear-desktop) (MIT).
 
 <p align="center">
@@ -11,7 +13,7 @@ A refined desktop canvas for music, with frosted-glass chrome and a plugin galle
 
 | | |
 | --- | --- |
-| Product | Ruri **0.1.0** |
+| Product | Ruri **0.2.0** <!-- x-release-please-version --> |
 | License | [MIT](license) — see [NOTICE](NOTICE) |
 | App id | `dev.ruri.desktop` |
 | Protocol | `ruri:` |
@@ -40,31 +42,57 @@ Default-on: **Glassy Theme**, **Glassy Backdrop**, **Album Color Theme**, **Sync
 > [!NOTE]
 > Do not enable Glassy Theme together with Blur Navigation Bar (double blur). Turn off Transparent Player while Glassy Backdrop is on.
 
+## Download
+
+You do **not** need a GitHub account. Open the latest release and click the file for your computer — the download starts immediately:
+
+**[Download Ruri](https://github.com/rjahir-rv/ruri/releases/latest)**
+
+| Your computer | Click this file |
+| --- | --- |
+| Windows 10/11 (64-bit) | `Ruri Setup *.exe` (installer). `Ruri *.exe` is portable (no install). |
+| Mac with Apple silicon (M1–M4) | `Ruri-*-arm64.dmg` |
+| Mac with Intel | `Ruri-*.dmg` (the one **without** `arm64`) |
+| Linux (Ubuntu/Debian) | `ruri_*_amd64.deb` or `Ruri-*.AppImage` |
+| Other Linux | `Ruri-*.AppImage` or `ruri-*.tar.gz` |
+
+Skip `.blockmap` files. Those are for the updater, not for installing.
+
+Builds are unsigned. Windows SmartScreen and macOS Gatekeeper will warn; that is expected (see below).
+
 ## Install
 
-Unsigned builds. GitHub Actions packages Linux, Windows, and macOS when you push a `v*` tag:
+### Windows
+
+1. Download `Ruri Setup *.exe`.
+2. If the browser says the file isn’t commonly downloaded, choose **Keep**, then **Keep anyway**.
+3. When SmartScreen shows “Windows protected your PC”, click **More info**, then **Run anyway**.
+4. Finish the installer. For the portable build, just run `Ruri *.exe`.
+
+These prompts appear because the Windows build has no Authenticode certificate. Choose **Run anyway** / **Install anyway** — it is the same Ruri file you just downloaded.
+
+### macOS
+
+1. Download the `.dmg` that matches your chip (`arm64` = Apple silicon; no `arm64` = Intel).
+2. Open the disk image and drag **Ruri** into **Applications**.
+3. The first launch may say the app is **damaged** or can’t be opened. Gatekeeper does that to unsigned apps. After it is in Applications, run:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+xattr -cr /Applications/Ruri.app
 ```
 
-That runs [Release](.github/workflows/release.yml) and attaches files to the GitHub Release. You can also run the workflow by hand from the Actions tab (artifacts only, no Release).
+4. Open Ruri again. If macOS still blocks it: **System Settings → Privacy & Security → Open Anyway**.
 
-| Platform | Artifact |
-| --- | --- |
-| Linux x64 | `Ruri-*.AppImage`, `ruri-*.tar.gz`, `ruri_*_amd64.deb` |
-| Windows x64 | `Ruri *.exe` (portable) and `Ruri Setup *.exe` (NSIS) |
-| macOS | `Ruri-*-mac.zip` / `.dmg` (x64 and arm64) |
+Do not turn Gatekeeper off for the whole Mac.
+
+### Linux
 
 ```bash
-chmod +x Ruri-0.1.0.AppImage
-./Ruri-0.1.0.AppImage
+chmod +x Ruri-*.AppImage
+./Ruri-*.AppImage
 ```
 
-Local packaging: `pnpm build` then `pnpm exec electron-builder --linux AppImage:x64 tar.gz:x64 -p never`. Output: `pack/`.
-
-This repository stays MIT. Do not vendor GPL-3.0 code (Better Lyrics, Glassy Music Merge Theme, or related extensions).
+Debian/Ubuntu: install `ruri_*_amd64.deb` with your package manager.
 
 ## Protocol
 
@@ -95,9 +123,22 @@ pnpm dev
 
 ```bash
 pnpm check          # lint + format + types
-pnpm test           # Playwright (unit + Electron smoke)
+pnpm test:unit      # Playwright unit tests (CI)
+pnpm test:electron  # Electron smoke (Linux; use xvfb-run if headless)
+pnpm test           # unit + electron
 pnpm build          # dist/ for packaging
 pnpm exec electron-builder --linux AppImage:x64 tar.gz:x64 -p never
+```
+
+Local packaging output: `pack/`.
+
+Releases: merging to `master` opens a release-please PR (`chore: release X.Y.Z`) whose notes list **Features** and **Bug Fixes** from conventional commits. Merge that PR to tag and publish. GitHub Actions then attaches the Linux, Windows, and macOS files.
+
+Manual fallback:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 `origin` is `rjahir-rv/ruri`. Do **not** push to `pear-devs/pear-desktop`.
@@ -108,7 +149,9 @@ git fetch upstream
 git merge upstream/master
 ```
 
-Keep Ruri identity files (`package.json`, `electron-builder.yml`, `license`, `NOTICE`, `README.md`, icons, `src/i18n/index.ts`, `src/index.ts` app id).
+Keep Ruri identity files (`package.json`, `electron-builder.yml`, `license`, `NOTICE`, `README.md`, `README.es.md`, `README.pt.md`, icons, `src/i18n/index.ts`, `src/index.ts` app id).
+
+This repository stays MIT. Do not vendor GPL-3.0 code (Better Lyrics, Glassy Music Merge Theme, or related extensions).
 
 ## Credits
 

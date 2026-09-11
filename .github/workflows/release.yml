@@ -102,6 +102,7 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
         with:
           files: release-files/*
-          generate_release_notes: true
+          # Keep Release Please Features / Bug Fixes notes; only attach binaries.
+          generate_release_notes: false
           fail_on_unmatched_files: false
           draft: false

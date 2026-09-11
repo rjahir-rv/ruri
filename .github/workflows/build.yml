@@ -10,7 +10,7 @@ permissions: {}
 env:
   NODE_VERSION: "24.x"
 
-# Compile only. Unsigned 0.1.0 artifacts are attached to the GitHub Release by hand.
+# Compile and run unit tests. Packaged builds attach on v* tags (see release.yml).
 
 jobs:
   build:
@@ -38,6 +38,9 @@ jobs:
 
       - name: Check
         run: pnpm check
+
+      - name: Unit tests
+        run: pnpm test:unit
 
       - name: Vite build
         run: pnpm build

@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file. Dates are d
 
 Ruri starts as a fork of [pear-devs/pear-desktop](https://github.com/pear-devs/pear-desktop) **v3.12.0**. History below that tag is upstream's.
 
-#### v0.1.0 (unreleased)
+#### v0.2.0 (unreleased)
 
-> 5 September 2026
+> 11 September 2026
+
+- docs: Windows SmartScreen and macOS Gatekeeper install steps; download table for people without a GitHub account
+- docs: Spanish and Portuguese READMEs
+- ci: Playwright unit tests on PRs; release-please Features / Bug Fixes notes
+
+#### [v0.1.0](https://github.com/rjahir-rv/ruri/releases/tag/v0.1.0)
+
+> 6 September 2026
 
 - feat: glassy theme, backdrop, and album-color chrome on by default
 - feat: in-app plugin gallery (Windows/Linux; native traffic lights on macOS)

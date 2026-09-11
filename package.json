@@ -3,7 +3,7 @@
   "name": "ruri",
   "desktopName": "dev.ruri.desktop",
   "productName": "Ruri",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A refined desktop client for YouTube Music, designed with translucent glass surfaces and focused listening.",
   "main": "./dist/main/index.js",
   "type": "module",
@@ -17,6 +17,8 @@
   "scripts": {
     "postinstall": "pnpm install-electron",
     "test": "pnpm playwright test",
+    "test:unit": "pnpm playwright test --project=unit",
+    "test:electron": "pnpm playwright test --project=electron",
     "test:debug": "pnpm cross-env DEBUG=pw:*,-pw:test:protocol playwright test",
     "build": "pnpm electron-vite build",
     "vite:inspect": "pnpm clean && electron-vite build --mode development && pnpm exec serve .vite-inspect",
