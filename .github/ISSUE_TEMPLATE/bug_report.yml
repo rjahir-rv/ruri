@@ -20,7 +20,7 @@ body:
     label: Ruri version
     description: |
       What version of Ruri are you using? Check if the issue still happens on the latest build.
-    placeholder: 0.1.0
+    placeholder: 0.2.0
   validations:
     required: true
 - type: checkboxes
@@ -64,7 +64,7 @@ body:
   attributes:
     label: Last known working Ruri version
     description: (If applicable) Last version where this still worked.
-    placeholder: 0.1.0
+    placeholder: 0.2.0
 - type: textarea
   attributes:
     label: Reproduction steps

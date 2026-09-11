@@ -25,15 +25,22 @@ function applyQuality(quality: GlassyQuality) {
   document.documentElement.dataset.glassyQuality = hwOff ? 'low' : quality;
 }
 
-/* blur-nav-bar frosts #nav-bar-background too. Stacking both doubles the
-   backdrop-filter on the same node: darker, blurrier, and slower. */
-async function warnOnDoubleBlur() {
-  if (await window.mainConfig.plugins.isEnabled('blur-nav-bar')) {
-    console.warn(
-      'glassy-theme: Blur Navigation Bar is also enabled; the nav bar gets a double blur. Turn one of them off.',
-    );
+function applyNavBlur(on: boolean) {
+  if (on) {
+    document.documentElement.dataset.glassyNavBlur = 'on';
+    return;
   }
+  document.documentElement.removeAttribute('data-glassy-nav-blur');
 }
+
+async function syncNavBlur() {
+  applyNavBlur(await window.mainConfig.plugins.isEnabled('blur-nav-bar'));
+}
+
+const onNavBlurPlugin = (_event: unknown, id: unknown) => {
+  if (id !== 'blur-nav-bar') return;
+  syncNavBlur().catch(console.error);
+};
 
 export default createPlugin({
   name: () => t('plugins.glassy-theme.name'),
@@ -47,7 +54,9 @@ export default createPlugin({
       const config = await getConfig();
       applyQuality(config.quality);
       if (config.fullscreenLyrics) startFullscreenLyrics();
-      await warnOnDoubleBlur();
+      await syncNavBlur();
+      window.ipcRenderer.on('plugin:enable', onNavBlurPlugin);
+      window.ipcRenderer.on('plugin:unload', onNavBlurPlugin);
     },
     onConfigChange(newConfig: GlassyThemeConfig) {
       applyQuality(newConfig.quality);
@@ -56,7 +65,10 @@ export default createPlugin({
     },
     stop() {
       stopFullscreenLyrics();
+      window.ipcRenderer.removeListener('plugin:enable', onNavBlurPlugin);
+      window.ipcRenderer.removeListener('plugin:unload', onNavBlurPlugin);
       delete document.documentElement.dataset.glassyQuality;
+      delete document.documentElement.dataset.glassyNavBlur;
     },
   },
 });

@@ -157,6 +157,11 @@ export const TitleBar = (props: TitleBarProps) => {
     return id ? (anchors().get(id) ?? null) : null;
   });
 
+  const openSubmenuItems = createMemo(() => {
+    const item = openMenuItem();
+    return item ? submenuItemsOf(item) : [];
+  });
+
   const [data, { refetch }] = createResource(
     async () => (await props.ipc.invoke('get-menu')) as Promise<Menu | null>,
   );
@@ -363,52 +368,53 @@ export const TitleBar = (props: TitleBarProps) => {
           </Index>
         </div>
       </Show>
-      <Show when={openMenuItem()}>
-        {(item) => (
-          <Switch
-            fallback={
-              <Panel
-                anchor={openAnchor()}
-                offset={{ mainAxis: 8 }}
+      {/* Key overlays on the menu id, not the MenuItem object. Enabling a
+          plugin clones the application menu; object identity would remount the
+          gallery/panel and flash the glass layer. */}
+      <Show when={openMenuId()}>
+        <Switch
+          fallback={
+            <Panel
+              anchor={openAnchor()}
+              offset={{ mainAxis: 8 }}
+              open={true}
+              placement={'bottom-start'}
+            >
+              <PanelRenderer
+                items={openSubmenuItems()}
+                onClick={handleItemClick}
+              />
+            </Panel>
+          }
+        >
+          <Match when={openMenuId() === PLUGINS_MENU_ID}>
+            <ErrorBoundary
+              fallback={(error) => {
+                console.error('plugin-gallery', error);
+                queueMicrotask(() => setOpenMenuId(null));
+                return null;
+              }}
+            >
+              <PluginGallery
+                items={openSubmenuItems()}
+                onClose={() => setOpenMenuId(null)}
+                onItemClick={handleItemClick}
                 open={true}
-                placement={'bottom-start'}
-              >
-                <PanelRenderer
-                  items={submenuItemsOf(item())}
-                  onClick={handleItemClick}
-                />
-              </Panel>
-            }
-          >
-            <Match when={isPluginsMenuItem(item())}>
-              <ErrorBoundary
-                fallback={(error) => {
-                  console.error('plugin-gallery', error);
-                  queueMicrotask(() => setOpenMenuId(null));
-                  return null;
-                }}
-              >
-                <PluginGallery
-                  items={submenuItemsOf(item())}
-                  onClose={() => setOpenMenuId(null)}
-                  onItemClick={handleItemClick}
-                  open={true}
-                />
-              </ErrorBoundary>
-            </Match>
-            <Match when={isAboutMenuItem(item())}>
-              <ErrorBoundary
-                fallback={(error) => {
-                  console.error('about-modal', error);
-                  queueMicrotask(() => setOpenMenuId(null));
-                  return null;
-                }}
-              >
-                <AboutModal onClose={() => setOpenMenuId(null)} open={true} />
-              </ErrorBoundary>
-            </Match>
-          </Switch>
-        )}
+              />
+            </ErrorBoundary>
+          </Match>
+          <Match when={openMenuId() === ABOUT_MENU_ID}>
+            <ErrorBoundary
+              fallback={(error) => {
+                console.error('about-modal', error);
+                queueMicrotask(() => setOpenMenuId(null));
+                return null;
+              }}
+            >
+              <AboutModal onClose={() => setOpenMenuId(null)} open={true} />
+            </ErrorBoundary>
+          </Match>
+        </Switch>
       </Show>
       <Show when={props.enableController}>
         <div style={{ flex: 1 }} />

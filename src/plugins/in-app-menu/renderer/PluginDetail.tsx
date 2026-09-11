@@ -118,7 +118,7 @@ export type PluginDetailProps = {
 
 export const PluginDetail = (props: PluginDetailProps) => {
   return (
-    <aside class={detailStyle()}>
+    <aside class={detailStyle()} data-ytmd-plugin-detail={true}>
       <header class={headerStyle()}>
         <PhIcon name={asIconName(props.plugin.icon)} size={22} />
         <h2 class={titleStyle()}>{props.plugin.name}</h2>

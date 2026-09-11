@@ -2,6 +2,10 @@
   --glassy-blur: 18px;
   --glassy-saturate: 140%;
   --glassy-tint-album: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.48);
+  /* Nav sits on the page wash. Keep this a whisper so the frost reads as the
+     backdrop, not a second bar. */
+  --glassy-tint-nav: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.07);
+  --glassy-nav-blur: 10px;
   --glassy-tint-low: rgba(var(--ytmusic-album-color-dark, 12, 12, 16), 0.82);
   --glassy-border: 1px solid rgba(255, 255, 255, 0.12);
   --glassy-radius: 14px;

@@ -28,9 +28,25 @@ a {
   -webkit-app-region: no-drag;
 }
 
-/* custom style for navbar */
+/* custom style for navbar. Hoist onto html / ytmusic-app so
+   #mini-guide-spacer (a sibling of #layout) inherits the same height.
+   !important: YTM writes 64px on :root / the app element. */
+html,
+:root,
+ytmusic-app,
 ytmusic-app-layout {
-  --ytmusic-nav-bar-height: 90px;
+  --ytmusic-nav-bar-height: 90px !important;
+}
+
+#nav-bar-background.ytmusic-app-layout {
+  height: var(--ytmusic-nav-bar-height) !important;
+}
+
+/* 2026 YTM dropped #mini-guide-spacer and still lays the rail out for a
+   64px nav. Add the extra Pear/Ruri nav height so Home is not under the
+   frosted strip. */
+ytmusic-guide-section-renderer:first-of-type {
+  padding-top: calc(var(--ytmusic-nav-bar-height) - 64px) !important;
 }
 
 /* Disable Image Selection */
@@ -74,13 +90,24 @@ tp-yt-paper-item.ytmusic-guide-entry-renderer::before {
   max-width: calc(100% - var(--ytmusic-player-page-vertical-padding) * 2);
 }
 
-/* macos traffic lights fix */
-:where([data-os*='Macintosh']) ytmusic-app-layout#layout ytmusic-nav-bar {
-  padding-top: var(--ytmusic-nav-bar-offset, 0);
-}
-:where([data-os*='Macintosh']) ytmusic-app-layout#layout {
+/* macos traffic lights fix. Set the offset on html so the mini-guide
+   spacer matches the taller nav; keep the layout copy in case YTM resets
+   the variable on #layout. */
+:where([data-os*='Macintosh']) {
   --ytmusic-nav-bar-offset: 24px;
-  --ytmusic-nav-bar-height: calc(90px + var(--ytmusic-nav-bar-offset, 0));
+  --ytmusic-nav-bar-height: calc(
+    90px + var(--ytmusic-nav-bar-offset, 0)
+  ) !important;
+}
+:where([data-os*='Macintosh'])
+  :is(html, :root, ytmusic-app, ytmusic-app-layout) {
+  --ytmusic-nav-bar-offset: 24px;
+  --ytmusic-nav-bar-height: calc(
+    90px + var(--ytmusic-nav-bar-offset, 0)
+  ) !important;
+}
+:where([data-os*='Macintosh']) ytmusic-nav-bar {
+  padding-top: var(--ytmusic-nav-bar-offset, 0);
 }
 
 tp-yt-iron-dropdown,

@@ -13,7 +13,7 @@ const ytmOrigin =
   'https://music.\u0079\u006f\u0075\u0074\u0075\u0062\u0065.com';
 
 test('Ruri App - With default settings, app is launched and visible', async () => {
-  test.setTimeout(90_000);
+  test.setTimeout(150_000);
 
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ruri-playwright-'));
 
@@ -122,9 +122,59 @@ test('Ruri App - With default settings, app is launched and visible', async () =
       'album-color-theme',
       'synced-lyrics',
       'do-not-track',
+      'blur-nav-bar',
     ].map((id) => window.mainConfig.plugins.isEnabled(id)))`);
   });
-  expect(defaultPlugins).toEqual([true, true, true, true, true]);
+  expect(defaultPlugins).toEqual([true, true, true, true, true, true]);
+
+  const chromeSnapshot = () =>
+    app.evaluate(async ({ BrowserWindow }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (!win) return null;
+      return win.webContents.executeJavaScript(`(async () => {
+        const html = document.documentElement;
+        const nav = document.querySelector('#nav-bar-background');
+        const home = document.querySelector('ytmusic-guide-entry-renderer');
+        const navStyle = nav ? getComputedStyle(nav) : null;
+        const navRect = nav?.getBoundingClientRect();
+        const homeRect = home?.getBoundingClientRect();
+        const overlap =
+          navRect && homeRect ? navRect.bottom - homeRect.top : null;
+        const lyrics = await window.ipcRenderer.invoke(
+          'peard:get-config',
+          'synced-lyrics',
+        );
+        return {
+          dataOs: html.getAttribute('data-os') ?? '',
+          navHeight: getComputedStyle(html)
+            .getPropertyValue('--ytmusic-nav-bar-height')
+            .trim(),
+          navBlurAttr: html.dataset.glassyNavBlur ?? '',
+          navBlur: navStyle?.backdropFilter ?? '',
+          navBg: navStyle?.backgroundColor ?? '',
+          overlap,
+          preferredProvider: lyrics?.preferredProvider ?? null,
+        };
+      })()`);
+    });
+
+  await expect.poll(chromeSnapshot, { timeout: 45_000 }).toEqual(
+    expect.objectContaining({
+      dataOs: 'Linux',
+      navHeight: '90px',
+      navBlurAttr: 'on',
+      preferredProvider: 'YTMusic',
+    }),
+  );
+
+  const chrome = await chromeSnapshot();
+  expect(chrome.navBg).toMatch(/rgba?\(/);
+  if (chrome.navBlur && chrome.navBlur !== 'none') {
+    expect(chrome.navBlur).toContain('blur(');
+  }
+  if (chrome.overlap !== null) {
+    expect(chrome.overlap).toBeLessThanOrEqual(2);
+  }
 
   await app.evaluate(async ({ BrowserWindow }) => {
     const win = BrowserWindow.getAllWindows()[0];
@@ -191,6 +241,128 @@ test('Ruri App - With default settings, app is launched and visible', async () =
       { timeout: 15_000 },
     )
     .toBe(true);
+
+  const runInPage = (source) =>
+    app.evaluate(async ({ BrowserWindow }, code) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (!win) return null;
+      return win.webContents.executeJavaScript(code);
+    }, source);
+
+  await expect
+    .poll(
+      () =>
+        runInPage(
+          `Boolean(document.getElementById('ytmd-title-bar-main-panel'))`,
+        ),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
+  await app.evaluate(async ({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('open-plugin-gallery');
+  });
+
+  await expect
+    .poll(
+      () =>
+        runInPage(
+          `Boolean(document.querySelector('[data-plugin-id="glassy-theme"]'))`,
+        ),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
+  await runInPage(
+    `document.querySelector('[data-plugin-id="glassy-theme"]')?.click()`,
+  );
+
+  await expect
+    .poll(
+      () =>
+        runInPage(
+          `Boolean(document.querySelector('[data-ytmd-plugin-detail]'))`,
+        ),
+      { timeout: 10_000 },
+    )
+    .toBe(true);
+
+  await runInPage(`(() => {
+    window.__gallerySheet = document.querySelector(
+      '[data-ytmd-plugin-gallery] [role="dialog"]',
+    );
+    window.__galleryDetail = document.querySelector('[data-ytmd-plugin-detail]');
+    window.__galleryTile = document.querySelector(
+      '[data-plugin-id="glassy-theme"]',
+    );
+    const option = [
+      ...document.querySelectorAll(
+        '[data-ytmd-plugin-detail] li[role="menuitem"]',
+      ),
+    ].find((el) =>
+      (el.textContent ?? '').includes(
+        'Show lyrics automatically in fullscreen',
+      ),
+    );
+    option?.click();
+  })()`);
+
+  await expect
+    .poll(
+      () =>
+        runInPage(`({
+          lyrics: window.mainConfig.plugins.getOptions('glassy-theme')
+            ?.fullscreenLyrics,
+          sheetSame:
+            window.__gallerySheet ===
+            document.querySelector('[data-ytmd-plugin-gallery] [role="dialog"]'),
+          detailSame:
+            window.__galleryDetail ===
+            document.querySelector('[data-ytmd-plugin-detail]'),
+          tileSame:
+            window.__galleryTile ===
+            document.querySelector('[data-plugin-id="glassy-theme"]'),
+        })`),
+      { timeout: 10_000 },
+    )
+    .toEqual({
+      lyrics: false,
+      sheetSame: true,
+      detailSame: true,
+      tileSame: true,
+    });
+
+  await runInPage(
+    `document
+      .querySelector('[data-plugin-id="disable-autoplay"] [role="switch"]')
+      ?.click()`,
+  );
+
+  await expect
+    .poll(
+      () =>
+        runInPage(`({
+          enabled: document
+            .querySelector('[data-plugin-id="disable-autoplay"]')
+            ?.getAttribute('data-enabled'),
+          sheetSame:
+            window.__gallerySheet ===
+            document.querySelector('[data-ytmd-plugin-gallery] [role="dialog"]'),
+          detailSame:
+            window.__galleryDetail ===
+            document.querySelector('[data-ytmd-plugin-detail]'),
+          detailOpen: Boolean(
+            document.querySelector('[data-ytmd-plugin-detail]'),
+          ),
+        })`),
+      { timeout: 15_000 },
+    )
+    .toEqual({
+      enabled: 'true',
+      sheetSame: true,
+      detailSame: true,
+      detailOpen: true,
+    });
 
   await app.close();
 });

@@ -85,6 +85,27 @@ function observeDocumentTitle() {
 
 observeDocumentTitle();
 
+function applyOsType() {
+  const root = document.documentElement;
+  if (!root) return;
+
+  const is = window.electronIs;
+  let osType = 'Unknown';
+  if (is?.osx?.()) {
+    osType = 'Macintosh';
+  } else if (is?.windows?.()) {
+    osType = 'Windows';
+  } else if (is?.linux?.()) {
+    osType = 'Linux';
+  } else {
+    const ua = navigator.userAgent;
+    if (/Macintosh|Mac OS X/i.test(ua)) osType = 'Macintosh';
+    else if (/Windows/i.test(ua)) osType = 'Windows';
+    else if (/Linux/i.test(ua)) osType = 'Linux';
+  }
+  root.setAttribute('data-os', osType);
+}
+
 window.ipcRenderer.on('peard:viewport-restore', () => {
   window.dispatchEvent(new Event('resize'));
 });
@@ -101,18 +122,7 @@ async function listenForApiLoad() {
 }
 
 async function onApiLoaded() {
-  // Workaround for macOS traffic lights
-  {
-    let osType = 'Unknown';
-    if (window.electronIs.osx()) {
-      osType = 'Macintosh';
-    } else if (window.electronIs.windows()) {
-      osType = 'Windows';
-    } else if (window.electronIs.linux()) {
-      osType = 'Linux';
-    }
-    document.documentElement.setAttribute('data-os', osType);
-  }
+  applyOsType();
 
   // Workaround for #2459
   document
@@ -556,6 +566,8 @@ const initObserver = async () => {
       resolve();
     }
   });
+
+  applyOsType();
 
   const observer = new MutationObserver(() => {
     const playerApi = document.querySelector<Element & MusicPlayer>(

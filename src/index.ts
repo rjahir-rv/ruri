@@ -187,12 +187,36 @@ electronDebug({
   devToolsMode: 'detach',
 });
 
-let icon = 'assets/icon.png';
-if (process.platform === 'win32') {
-  icon = 'assets/generated/icons/win/icon.ico';
-} else if (process.platform === 'darwin') {
-  icon = 'assets/generated/icons/mac/icon.icns';
+function resolveAppIcon(): string {
+  // Resolve against the bundle, not cwd. WebStorm often launches Electron
+  // from a nested working directory, so a relative assets/ path 404s.
+  const root = path.join(__dirname, '..', '..');
+  const png = path.join(root, 'assets', 'icon.png');
+  if (process.platform === 'win32') {
+    const ico = path.join(
+      root,
+      'assets',
+      'generated',
+      'icons',
+      'win',
+      'icon.ico',
+    );
+    if (fs.existsSync(ico)) return ico;
+  } else if (process.platform === 'darwin') {
+    const icns = path.join(
+      root,
+      'assets',
+      'generated',
+      'icons',
+      'mac',
+      'icon.icns',
+    );
+    if (fs.existsSync(icns)) return icns;
+  }
+  return png;
 }
+
+const icon = resolveAppIcon();
 
 function onClosed() {
   // Dereference the window

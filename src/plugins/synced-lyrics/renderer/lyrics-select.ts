@@ -36,8 +36,16 @@ export const pickBestProvider = (
   },
 ): ProviderName => {
   const preferred = options.preferred;
-  if (preferred && hasUsableLyrics(lyrics[preferred]?.data)) {
-    return preferred;
+  if (preferred) {
+    const entry = lyrics[preferred];
+    if (hasUsableLyrics(entry?.data)) {
+      return preferred;
+    }
+    // Stay on the preferred source while it is still in flight so a faster
+    // provider (MusixMatch) cannot flash wrong-language lyrics first.
+    if (entry?.state === 'fetching') {
+      return preferred;
+    }
   }
 
   const ranked = [...providerNames].sort(
