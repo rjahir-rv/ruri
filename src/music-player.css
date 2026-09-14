@@ -111,6 +111,8 @@ tp-yt-paper-item.ytmusic-guide-entry-renderer::before {
 }
 
 tp-yt-iron-dropdown,
-tp-yt-paper-dialog {
+tp-yt-paper-dialog,
+ytmusic-popup-container {
+  -webkit-app-region: no-drag;
   app-region: no-drag;
 }

@@ -12,17 +12,10 @@ html[data-glassy-backdrop] {
 html[data-glassy-backdrop] #ruri-glassy-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-}
-
-/* Stack the YTM app above the artwork layer so chrome stays clickable.
-   Transparent fills (below) let backdrop-filter on glass panels sample this. */
-html[data-glassy-backdrop] ytmusic-app {
-  position: relative;
-  z-index: 1;
 }
 
 html[data-glassy-backdrop] .ruri-glassy-backdrop__layer {

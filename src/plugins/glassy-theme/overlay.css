@@ -340,6 +340,7 @@ html[data-glassy-quality] tp-yt-paper-listbox,
 html[data-glassy-quality] tp-yt-paper-dialog {
   --paper-dialog-background-color: transparent;
   --paper-listbox-background-color: transparent;
+  color: var(--glassy-text);
   background: var(--glassy-tint-album) !important;
   border: var(--glassy-border);
   border-radius: var(--glassy-radius-lg);
@@ -354,8 +355,19 @@ html[data-glassy-quality='high'] tp-yt-paper-dialog {
     saturate(var(--glassy-saturate)) !important;
 }
 
-html[data-glassy-quality] tp-yt-iron-dropdown {
+html[data-glassy-quality]
+  :is(
+    tp-yt-iron-dropdown,
+    tp-yt-paper-dialog,
+    tp-yt-iron-overlay-backdrop,
+    ytmusic-popup-container
+  ) {
+  -webkit-app-region: no-drag;
   app-region: no-drag;
+}
+
+html[data-glassy-quality] ytmusic-playlist-add-to-option-renderer {
+  color: var(--glassy-text);
 }
 
 /* 2026-08 YTM: list-row hover — white veil over tint, no per-row blur.
@@ -370,7 +382,8 @@ html[data-glassy-quality]
     ytmusic-two-row-item-renderer,
     ytmusic-search-suggestion,
     ytmusic-menu-navigation-item-renderer,
-    ytmusic-toggle-menu-service-item-renderer
+    ytmusic-toggle-menu-service-item-renderer,
+    ytmusic-playlist-add-to-option-renderer
   ):hover {
   background:
     linear-gradient(var(--glassy-hover), var(--glassy-hover)),
