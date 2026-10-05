@@ -106,6 +106,60 @@ function applyOsType() {
   root.setAttribute('data-os', osType);
 }
 
+// 2026-10 YTM: a snackbar with an action button ("Saved to playlist · Change")
+// opens as a persistent toast (duration 0) that relies on a close button, but
+// the `web_remove_snackbar_actions` flag stops that button from rendering, so
+// the toast never leaves. Close it like a regular 4 s toast unless the pointer
+// or focus is on it.
+const PERSISTENT_TOAST_TIMEOUT_MS = 4_000;
+
+type PaperToast = HTMLElement & {
+  duration?: number;
+  opened?: boolean;
+  close?: () => void;
+};
+
+function closePersistentToasts() {
+  const pending = new WeakSet<PaperToast>();
+
+  const schedule = (toast: PaperToast) => {
+    if (pending.has(toast)) return;
+    pending.add(toast);
+    setTimeout(() => {
+      pending.delete(toast);
+      if (!toast.opened || toast.duration !== 0) return;
+      if (toast.matches(':hover') || toast.contains(document.activeElement)) {
+        schedule(toast);
+        return;
+      }
+      // The outer renderer also clears YTM's toast-manager slot; closing only
+      // the paper toast would let the manager reopen it.
+      const host = toast.closest('ytmusic-notification-action-renderer') as
+        | (HTMLElement & { close?: () => void })
+        | null;
+      if (host?.close) host.close();
+      else toast.close?.();
+    }, PERSISTENT_TOAST_TIMEOUT_MS);
+  };
+
+  document.addEventListener(
+    'iron-overlay-opened',
+    (event) => {
+      const toast = event.composedPath()[0];
+      if (
+        toast instanceof HTMLElement &&
+        toast.localName === 'tp-yt-paper-toast' &&
+        (toast as PaperToast).duration === 0
+      ) {
+        schedule(toast as PaperToast);
+      }
+    },
+    true,
+  );
+}
+
+closePersistentToasts();
+
 window.ipcRenderer.on('peard:viewport-restore', () => {
   window.dispatchEvent(new Event('resize'));
 });
